@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ContentPage xmlns="http://xamarin.com/schemas/2014/forms" 
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml" 
+             xmlns:local="clr-namespace:Noveler" 
+             x:Class="Noveler.MainPage">
+    <StackLayout VerticalOptions="Center">
+        <Label Text="Url Template"/>
+        <Editor Text="{Binding Path='UrlTemplate'}" FontSize="Small" HeightRequest="80"/>
+       
+        <Label Text="KeyWord"/>
+        <Editor Text="{Binding Path='KeyWord'}" FontSize="Small" TextColor="Red"/>
+        
+        <Label Text="ThreadId"/>
+        <Editor Text="{Binding Path='ThreadId'}" FontSize="Small" TextColor="Red"/>
+        
+        <Label Text="From Page"/>
+        <Editor Text="{Binding Path='FromPageIndex'}" FontSize="Small" TextColor="Red"/>
+        
+        <Label Text="To Page"/>
+        <Editor Text="{Binding Path='ToPageIndex'}" FontSize="Small" TextColor="Red"/>
+        
+        <Button Text="Go" Clicked="Handle_Clicked"/>
+        <ScrollView x:Name="Previewer" HeightRequest="100" >
+            <Editor 
+                    Text="{Binding Path='PreviewText' Mode=TwoWay}" 
+                    FontSize="Small" 
+                    TextColor="Red"/>
+        </ScrollView>
+        <ProgressBar Progress="{Binding Path='ProgressRate' Mode=TwoWay}"/>
+    </StackLayout>
+</ContentPage>
