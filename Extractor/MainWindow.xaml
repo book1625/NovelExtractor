@@ -10,6 +10,7 @@
     Height="600"
     d:DataContext="{d:DesignInstance Type=local:MainWindowViewModel,
                                      IsDesignTimeCreatable=False}"
+    FontSize="14"
     mc:Ignorable="d">
 
     <Window.Resources>
@@ -32,7 +33,8 @@
         <StackPanel
             Grid.Row="0"
             Grid.Column="1"
-            Margin="5">
+            Margin="5"
+            Background="DarkSeaGreen">
             <TextBlock Margin="5" Text="目標網頁：" />
             <TextBox Margin="5" Text="{Binding TargetUrl, Mode=TwoWay}" />
             <Button Margin="5" Command="{Binding ParseCommand}">解析清單</Button>
