@@ -15,4 +15,10 @@
     <ProjectReference Include="..\ContentExtractor\ContentExtractor.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="nLog.config">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
