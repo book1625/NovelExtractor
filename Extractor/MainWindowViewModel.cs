@@ -184,6 +184,19 @@ public class MainWindowViewModel : INotifyPropertyChanged
     }, () => true);
 
     /// <summary>
+    /// 暫停下載工作
+    /// </summary>
+    public RelayCommand StopCommand => new(() =>
+    {
+        if (_currJob is null)
+        {
+            DisplayMessage("沒有正在運行的下載");
+        }
+        DisplayMessage("暫停所有下載工作");
+        _currJob?.CancelProcessAsync();
+    }, () => true);
+
+    /// <summary>
     /// 輸出檔案
     /// </summary>
     public RelayCommand SaveCommand => new(() =>

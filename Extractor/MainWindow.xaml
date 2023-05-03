@@ -49,6 +49,7 @@
                 </TextBlock>
             </StackPanel>
             <Button Margin="5" Command="{Binding RunCommand}">開始下載</Button>
+            <Button Margin="5" Command="{Binding StopCommand}">暫停下載</Button>
             <TextBlock Margin="5" Text="書名：" />
             <TextBox Margin="5" Text="{Binding BookName, Mode=TwoWay}" />
             <TextBlock Margin="5" Text="作者名：" />

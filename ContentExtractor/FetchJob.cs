@@ -48,11 +48,17 @@ namespace ContentExtractor
 
         #region Public Methods
 
+        private CancellationTokenSource cts;
+
         /// <summary>
         /// 開始進行截取工作
         /// </summary>
         public void ProcessAsync()
         {
+            CancelProcessAsync();
+
+            cts = new CancellationTokenSource();
+
             Task.Run(() =>
             {
                 lock (_operationLock)
@@ -62,6 +68,8 @@ namespace ContentExtractor
                         var counter = 1;
                         foreach (var fetchItem in _allItems)
                         {
+                            if (cts.IsCancellationRequested) return;
+
                             if (!fetchItem.IsFetched)
                             {
                                 fetchItem.ParseTextContext();
@@ -85,7 +93,15 @@ namespace ContentExtractor
 
                     FireOnProcessCompleted(_allItems.All(x => x.IsFetched));
                 }
-            });
+            }, cts.Token);
+        }
+
+        /// <summary>
+        /// 停下當前的下載
+        /// </summary>
+        public void CancelProcessAsync()
+        {
+            if (cts?.IsCancellationRequested == false) cts.Cancel();
         }
 
         /// <summary>
