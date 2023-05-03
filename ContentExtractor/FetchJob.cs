@@ -1,4 +1,6 @@
-﻿using System;
+﻿using NLog;
+using QuickEPUB;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,55 +14,36 @@ namespace ContentExtractor
     /// </summary>
     public class FetchJob
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         /// <summary>
         /// 呼叫網頁連結間的間隔，避免被對方服務器視為攻擊
         /// </summary>
-        private const int DefaultFetchPeriodMs = 300;
+        private const int DefaultFetchPeriodMs = 100;
 
         /// <summary>
         /// 記錄所有被要求的工作連結
         /// </summary>
-        private List<FetchItem> fAllItems;
+        private readonly List<PageFetchItem> _allItems;
 
         /// <summary>
         /// 公開方法共用的同步鎖
         /// </summary>
-        private readonly object fOperationLock = new object();
+        private readonly object _operationLock = new object();
 
         /// <summary>
-        /// ctor 用來針對 cK101 的網址作設置的
+        /// ctor
         /// </summary>
-        /// <param name="fromIndex"></param>
-        /// <param name="toIndex"></param>
-        /// <param name="threadId"></param>
-        /// <param name="contentKeyword"></param>
-        /// <param name="urlTemplate"></param>
-        public FetchJob(int fromIndex, int toIndex, int threadId, string contentKeyword, string urlTemplate)
+        /// <param name="fetchList"></param>
+        public FetchJob(List<Tuple<string, string>> fetchList)
         {
-            InitItems(fromIndex, toIndex,threadId, contentKeyword, urlTemplate);
-        }
-
-        /// <summary>
-        /// 初始化所有需要截取的網頁連接
-        /// </summary>
-        /// <param name="fromIndex"></param>
-        /// <param name="toIndex"></param>
-        /// <param name="threadId"></param>
-        /// <param name="contentKeyword"></param>
-        /// <param name="urlTemplate"></param>
-        private void InitItems(int fromIndex, int toIndex, int threadId, string contentKeyword, string urlTemplate)
-        {
-            fAllItems = new List<FetchItem>();
-            
-            for (var i = fromIndex; i <= toIndex; i++)
+            var index = 1;
+            _allItems = fetchList.Select(f => new PageFetchItem()
             {
-                var tarItem = new FetchItem
-                {
-                    Url = string.Format(urlTemplate, threadId, i),
-                    Keyword = contentKeyword
-                };
-                fAllItems.Add(tarItem);
-            }
+                Index = index++,
+                Url = f.Item1,
+                Title = f.Item2
+            }).ToList();
         }
 
         /// <summary>
@@ -69,9 +52,9 @@ namespace ContentExtractor
         /// <returns></returns>
         public List<string> GetUrls()
         {
-            lock (fOperationLock)
+            lock (_operationLock)
             {
-                return fAllItems.Select(x => x.Url).ToList();
+                return _allItems.Select(x => x.Url).ToList();
             }
         }
 
@@ -82,59 +65,51 @@ namespace ContentExtractor
         {
             Task.Run(() =>
             {
-                lock (fOperationLock)
+                lock (_operationLock)
                 {
                     try
                     {
-                        var index = 1.0;
-                        foreach (var fetchItem in fAllItems)
+                        var counter = 1;
+                        foreach (var fetchItem in _allItems)
                         {
-                            string status = "";
-                            string fetchString = "";
-
                             if (!fetchItem.IsFetched)
                             {
-                                fetchItem.Process(out status, out fetchString);
-                                Thread.Sleep(DefaultFetchPeriodMs);
+                                fetchItem.ParseTextContext();
+
+                                //如果有發生取得異常，就意思一下先 hold 住不要一直捉
+                                if (!fetchItem.IsFetched) 
+                                    Thread.Sleep(10000);
+                                else 
+                                    Thread.Sleep(DefaultFetchPeriodMs);
                             }
 
-                            FireOnProcessStatus(index / fAllItems.Count, $"{status}");
-                            index++;
+                            FireOnProcessStatus((double)counter / _allItems.Count, fetchItem);
+                            counter++;
                         }
                     }
                     catch (Exception e)
-                    {   
-                        //todo : some error control ?
+                    {
+                        //todo : some error control
+                        Logger.Error(e);
                     }
 
-                    FireOnProcessCompleted(fAllItems.All(x => x.IsFetched));
+                    FireOnProcessCompleted(_allItems.All(x => x.IsFetched));
                 }
             });
         }
 
         /// <summary>
-        /// 取得當前的所有截取結果，已過濾不必要的字元
-        /// </summary>
-        /// <returns></returns>
-        public string GetFilterContent()
-        {
-            lock (fOperationLock)
-            {
-                return string.Join(Environment.NewLine, fAllItems.Select(x => x.GetFilterString()));
-            }
-        }
-
-        /// <summary>
-        /// 將截取結果輸出成檔案
+        /// 將截取結果輸出成文字檔案
         /// </summary>
         /// <param name="path"></param>
-        /// <param name="name"></param>
+        /// <param name="bookName"></param>
+        /// <param name="authName"></param>
         /// <returns></returns>
-        public bool SaveToFile(string path, string name)
+        public bool SaveToTxtFile(string path, string bookName, string authName)
         {
             try
             {
-                var tarFile = new FileInfo($@"{path}\{name}.txt");
+                var tarFile = new FileInfo($@"{path}\{authName}-{bookName}.txt");
 
                 if (tarFile.Exists)
                 {
@@ -143,7 +118,18 @@ namespace ContentExtractor
 
                 using (var sw = new StreamWriter(tarFile.Create()))
                 {
-                    sw.WriteLine(GetFilterContent());
+                    foreach (var fetchItem in _allItems)
+                    {
+                        sw.WriteLine(fetchItem.Title);
+                        sw.WriteLine();
+
+                        foreach (var contextItem in fetchItem.GetContext())
+                        {
+                            sw.WriteLine(contextItem);
+                            sw.WriteLine();
+                        }
+                    }
+
                     sw.Close();
                 }
 
@@ -152,29 +138,81 @@ namespace ContentExtractor
             catch (Exception ex)
             {
                 //todo : error control
+                Logger.Error(ex);
                 return false;
             }
         }
 
-        #region events
+        /// <summary>
+        /// 將截取結果輸出成電子書檔案
+        /// </summary>
+        /// <param name="path"></param>
+        /// <param name="bookName"></param>
+        /// <param name="authName"></param>
+        /// <returns></returns>
+        public bool SaveToEpubFile(string path, string bookName, string authName)
+        {
+            try
+            {
+                var tarFile = new FileInfo($@"{path}\{authName}-{bookName}.epub");
 
-        public delegate void ProcessStatusHandler(double progressRate, string previewMsg);
+                if (tarFile.Exists)
+                {
+                    tarFile.Delete();
+                }
+
+
+                var doc = new Epub(bookName, authName);
+
+                foreach (var pageFetchItem in _allItems)
+                {
+                    var epubContext = pageFetchItem.GetContext().Select(s => $"<p>{s}</p>");
+                    doc.AddSection(pageFetchItem.Title, $"<h2>{pageFetchItem.Title}</h2> {string.Join(" ", epubContext)}");
+                }
+
+                using (var fs = new FileStream(tarFile.FullName, FileMode.Create))
+                {
+                    doc.Export(fs);
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                //todo : error control
+                Logger.Error(ex);
+                return false;
+            }
+        }
 
         /// <summary>
-        /// 當一個截取行為完成時發動
+        /// 取得當下的截取狀態
+        /// </summary>
+        /// <returns></returns>
+        public List<Tuple<int, bool, string, int>> GetAllFetchStatus()
+        {
+            return _allItems.Select(item => new Tuple<int, bool, string, int>(item.Index, item.IsFetched, item.Title, item.GetRoughContextLen())).ToList();
+        }
+
+        #region events
+
+        public delegate void ProcessStatusHandler(double progressRate, PageFetchItem item);
+
+        /// <summary>
+        /// 當一個截取行為完成時發動進度回報事件
         /// </summary>
         public event ProcessStatusHandler OnProcessStatus;
 
-        private void FireOnProcessStatus(double progressRate, string previewMsg)
+        private void FireOnProcessStatus(double progressRate, PageFetchItem item)
         {
             var temp = OnProcessStatus;
-            temp?.Invoke(progressRate, previewMsg);
+            temp?.Invoke(progressRate, item);
         }
 
         public delegate void ProcessCompletedHandler(bool isAllDone);
-        
+
         /// <summary>
-        /// 當整個截取工作完成時發動
+        /// 當整個截取工作完成一輪時發動事件
         /// </summary>
         public event ProcessCompletedHandler OnProcessCompleted;
 
@@ -183,6 +221,7 @@ namespace ContentExtractor
             var temp = OnProcessCompleted;
             temp?.Invoke(isAllDone);
         }
+
         #endregion
     }
 }

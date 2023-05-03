@@ -1,4 +1,5 @@
-﻿using HtmlAgilityPack;
+﻿using System;
+using HtmlAgilityPack;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -12,12 +13,12 @@ namespace ContentExtractor
         /// <summary>
         /// 用來分割內文的字元組
         /// </summary>
-        private char[] SPLIT_CHARS = new char[] { '，', '。', ',', '.', '?', '!' };
+        private readonly char[] _splitChars = new char[] { '，', '。', ',', '.', '?', '!' };
 
         /// <summary>
         /// 用來分割內文的字串組
         /// </summary>
-        private string[] SPLIT_STRINGS = new string[] { "<p>", "<br>", "</p>", "</br>" };
+        private readonly string[] _splitStrings = new string[] { "<p>", "<br>", "</p>", "</br>" };
 
         #endregion
 
@@ -26,129 +27,63 @@ namespace ContentExtractor
         /// <summary>
         /// 建立HtmlAgaility的html物件 ( Dom Tree )
         /// </summary>
-        private HtmlAgilityPack.HtmlDocument fHtmlDoc;
-
-        /// <summary>
-        /// 建立HtmlAgaility的html物件 ( Dom Tree )
-        /// </summary>
-        public HtmlAgilityPack.HtmlDocument HtmlDoc
+        public HtmlDocument HtmlDoc
         {
-            get
-            {
-                return fHtmlDoc;
-            }
+            get;
+            private set;
         }
 
-        /// <summary>
-        /// 儲存所有有圖的節點
-        /// </summary>
-        private List<HtmlNode> fImgFileCandidateList = new List<HtmlNode>();
-
-        /// <summary>
-        /// 儲存所有有圖的節點
-        /// </summary>
-        public List<HtmlNode> ImgFileCandidateList
-        {
-            get
-            {
-                return fImgFileCandidateList;
-            }
-        }
-
-        /// <summary>
-        /// 儲存有內文的節點 (儲存Div, Table, Section節點)
-        /// </summary>
-        private List<HtmlAgilityPack.HtmlNode> fTarTagDataList = new List<HtmlAgilityPack.HtmlNode>();
-
-        /// <summary>
-        /// 儲存有內文的節點 (儲存Div, Table, Section節點)
-        /// </summary>
-        public List<HtmlAgilityPack.HtmlNode> TarTagDataList
-        {
-            get
-            {
-                return fTarTagDataList;
-            }
-        }
-
-        /// <summary>
-        /// 儲存所有有分割字元的節點(',' '.' etc...)
-        /// </summary>
-        private List<SplitCharsNode> fHasSplitCharsNodeList = new List<SplitCharsNode>();
+        ///// <summary>
+        ///// 儲存有內文的節點 (儲存Div, Table, Section節點)
+        ///// </summary>
+        //public List<HtmlNode> TarTagDataList
+        //{
+        //    get;
+        //    private set;
+        //} = new List<HtmlNode>();
 
         /// <summary>
         /// 儲存所有有分割字元的節點(',' '.' etc...)
         /// </summary>
         public List<SplitCharsNode> HasSplitCharsNodeList
         {
-            get
-            {
-                return fHasSplitCharsNodeList;
-            }
+            get;
+            private set;
         }
-
-        /// <summary>
-        /// 儲存最大內文節點 (OuterHtml)
-        /// </summary>
-        private HtmlNode fMaxOuterHtmlNode = null;
 
         /// <summary>
         /// 儲存最大內文節點 (OuterHtml)
         /// </summary>
         public HtmlNode MaxOuterHtmlNode
         {
-            get
-            {
-                return fMaxOuterHtmlNode;
-            }
-            set
-            {
-                fMaxOuterHtmlNode = value;
-            }
+            get;
+            private set;
         }
-
-        /// <summary>
-        /// 儲存最大內文節點 (InnerText)
-        /// </summary>
-        private HtmlNode fMaxInnerTextNode = null;
 
         /// <summary>
         /// 儲存最大內文節點 (InnerText)
         /// </summary>
         public HtmlNode MaxInnerTextNode
         {
-            get
-            {
-                return fMaxInnerTextNode;
-            }
-            set
-            {
-                fMaxInnerTextNode = value;
-            }
+            get;
+            private set;
         }
-
-        /// <summary>
-        /// 傳入的原始資料
-        /// </summary>
-        private string fInputHtmlData;
 
         /// <summary>
         /// 傳入的原始資料
         /// </summary>
         public string InputHtmlData
         {
-            get
-            {
-                return fInputHtmlData;
-            }
-        }     
+            get;
+            private set;
+        }
+
+        #endregion
 
         /// <summary>
         /// 存所有的FormNode
         /// </summary>
-        private List<HtmlNode> fFormNodeList = new List<HtmlNode>();
-
-        #endregion
+        private readonly List<HtmlNode> _formNodeList = new List<HtmlNode>();
 
         #region 建構子
 
@@ -158,13 +93,13 @@ namespace ContentExtractor
         /// <param name="inputHtmlData">傳入的Html資料</param>
         public DomTree(string inputHtmlData)
         {
-            this.fInputHtmlData = inputHtmlData;
+            InputHtmlData = inputHtmlData;
 
             //建立HtmlAgaility的html物件
-            fHtmlDoc = new HtmlAgilityPack.HtmlDocument();
+            HtmlDoc = new HtmlDocument();
 
             //載入資料，成為Dom Tree
-            fHtmlDoc.LoadHtml(fInputHtmlData);
+            HtmlDoc.LoadHtml(InputHtmlData);
         }
 
         /// <summary>
@@ -173,47 +108,19 @@ namespace ContentExtractor
         /// <param name="inputHtmlData">傳入的Html資料</param>
         /// <param name="removeTagString">移除特定的Tag清單</param>
         /// <param name="removePatternString">移除特定的Pattern</param>
-        public DomTree(string inputHtmlData, string removeTagString, string removePatternString)
+        public DomTree(string inputHtmlData, string removeTagString = "", string removePatternString = "")
         {
-            #region 舊版
-            //this.fInputHtmlData = inputHtmlData;
-
-            //fHtmlDoc = new HtmlAgilityPack.HtmlDocument();
-            //fHtmlDoc.LoadHtml(fInputHtmlData);
-
-            //#region  移除註解
-
-            //fRemoveComments();
-
-            //#endregion
-
-            //#region  移除特定的Tag清單
-
-            //fRemoveTags(removeTagString.Replace(" ", "").ToLower().Split(',').ToList());
-
-            //#endregion
-
-            //#region 移除特定的Pattern
-            //fAfterRemoveHtmlData = fRemovePattern(fHtmlDoc.DocumentNode.OuterHtml,removePatternString);
-            //#endregion
-
-            //#region 以新的資料建立 Dom Tree
-            //fHtmlDoc = new HtmlAgilityPack.HtmlDocument();
-            //fHtmlDoc.LoadHtml(fAfterRemoveHtmlData);
-            //#endregion
-            #endregion
-
-            this.fInputHtmlData = inputHtmlData;
+            InputHtmlData = inputHtmlData;
 
             #region 移除特定的Pattern
 
-            string fAfterRemoveHtmlData = removePattern(fInputHtmlData, removePatternString);
+            var fAfterRemoveHtmlData = removePattern(InputHtmlData, removePatternString);
 
             #endregion
 
             #region 以移除特定Pattern後的資料建立 Dom Tree
-            fHtmlDoc = new HtmlAgilityPack.HtmlDocument();
-            fHtmlDoc.LoadHtml(fAfterRemoveHtmlData);
+            HtmlDoc = new HtmlDocument();
+            HtmlDoc.LoadHtml(fAfterRemoveHtmlData);
             #endregion
 
             #region  移除註解
@@ -228,6 +135,7 @@ namespace ContentExtractor
 
             #endregion
         }
+
         #endregion
 
         /// <summary>
@@ -237,93 +145,60 @@ namespace ContentExtractor
         /// <returns>找到的節點</returns>
         public List<HtmlNode> ExtractTargetNodes(string tarKeyWord)
         {
-            List<HtmlNode> myTarget = new List<HtmlNode>();
+            var x = HtmlDoc.DocumentNode.DescendantsAndSelf().Where(n => !string.IsNullOrEmpty(n.Id));
+            return x.Where(node => node.Id.Contains(tarKeyWord)).ToList();
+        }
 
-            var x = fHtmlDoc.DocumentNode.DescendantsAndSelf().Where(n => !string.IsNullOrEmpty(n.Id));
+        /// <summary>
+        /// 抽取最大張表格的所有連接
+        /// </summary>
+        /// <returns></returns>
+        public List<HtmlNode> ExtractBigTableLinkNodes(int limitChildDepth)
+        {
+            var maxCount = 0;
+            HtmlNode maxNode = null;
 
-            foreach (var node in x)
+            foreach (var tagNode in HtmlDoc.DocumentNode.Descendants())
             {
-                if(node.Id.Contains(tarKeyWord))
+                if (tagNode.NodeType != HtmlNodeType.Element) continue;
+                var tempTagName = tagNode.Name.ToLower();
+                if (!(tempTagName == "table" || tempTagName == "div")) continue;
+
+                if (GetChildDepth(tagNode, 1) > limitChildDepth) continue;
+
+                if (maxNode is null)
                 {
-                    myTarget.Add(node);
+                    maxNode = tagNode;
+                    maxCount = tagNode.Descendants().Count();
+                }
+                else
+                {
+                    if (maxCount >= tagNode.Descendants().Count()) continue;
+                    maxNode = tagNode;
+                    maxCount = tagNode.Descendants().Count();
                 }
             }
 
-            return myTarget;
+            return maxNode?.Descendants()
+                .Where(n => n.NodeType == HtmlNodeType.Element && n.Name.ToLower() == "a")
+                .ToList();
+
         }
 
-        #region v1 輸入資料轉成Dom Tree後，針對特定Tag節點作處理，取內文最多的節點(沒在用)
+        private static int GetChildDepth(HtmlNode node, int maxDepth)
+        {
+            if (node.ChildNodes.Count == 0) return maxDepth;
 
-        ///// <summary>
-        ///// 初始物件資料 
-        ///// </summary>
-        ///// <param name="inputHtmlData"></param>
-        //public void InitMaxOuterHtmlAndMaxInnerTextNode()
-        //{
-        //    fTarTagDataList = new List<HtmlNode>();
-        //    fImgFileCandidateList = new List<HtmlNode>();
-        //    fMaxOuterHtmlNode = null;
-        //    fMaxInnerTextNode = null;
+            var max = maxDepth;
 
-        //    //儲存所有的節點
-        //    List<HtmlAgilityPack.HtmlNode> tempAllTagNodeList = fHtmlDoc.DocumentNode.DescendantsAndSelf().ToList();
+            foreach (var nodeChildNode in node.ChildNodes)
+            {
+                var temp = GetChildDepth(nodeChildNode, maxDepth + 1);
+                if (temp > max) max = temp;
+            }
 
-        //    //儲存所有有圖的節點
-        //    //fImgFileCandidateList = fHtmlDoc.DocumentNode.Descendants("img").ToList();
-
-        //    fImgFileCandidateList = (from n in fHtmlDoc.DocumentNode.Descendants("img")
-        //                                 where n.Attributes["src"] != null
-        //                                 select n).ToList();
-
-        //    double innerLength = 0;
-
-        //    foreach (var tagNode in tempAllTagNodeList)
-        //    {
-        //        //只需要作Element型態的即可
-        //        if (tagNode.NodeType == HtmlAgilityPack.HtmlNodeType.Element)
-        //        {
-        //            string tempTagName = tagNode.Name.ToLower();
-
-
-
-        //            if ((tempTagName == "table") || (tempTagName == "div") || (tempTagName == "section"))
-        //            {
-        //                //有內文，才作儲存，找圖用
-        //                if (!string.IsNullOrEmpty(tagNode.InnerText.Trim()))
-        //                {
-        //                    //儲存有內文的節點
-        //                    fTarTagDataList.Add(tagNode);
-        //                }
-
-        //                ////找出最大內文節點
-        //                //if (tagNode.OuterHtml.Length > MaxOuterHtml.Length)
-        //                //{
-        //                //    fMaxOuterHtml = tagNode.OuterHtml;
-        //                //}
-
-        //                //找出最大內文節點
-        //                if (fMaxOuterHtmlNode == null || tagNode.OuterHtml.Length > fMaxOuterHtmlNode.OuterHtml.Length)
-        //                {
-        //                    fMaxOuterHtmlNode = tagNode;
-        //                }
-
-        //                string inn = tagNode.InnerText;
-        //                inn = inn.Replace("\n", "");
-        //                inn = inn.Replace("\t", "");
-
-        //                if (inn.Length > innerLength)
-        //                {
-        //                    fMaxInnerTextNode = tagNode;
-
-        //                    innerLength = inn.Length;
-        //                }
-        //            }
-        //        }
-        //    }
-
-        //}
-
-        #endregion
+            return max;
+        }
 
         #region v2 輸入資料轉成Dom Tree後，針對特定Tag節點作處理，取內文分割字元最多的節點
 
@@ -333,154 +208,33 @@ namespace ContentExtractor
         /// <param name="inputHtmlData"></param>
         public void InitMaxOuterHtmlAndMaxInnerTextNodeV2()
         {
-            fTarTagDataList = new List<HtmlNode>();
-            fImgFileCandidateList = new List<HtmlNode>();
-            fHasSplitCharsNodeList = new List<SplitCharsNode>();
-            fMaxOuterHtmlNode = null;
-            fMaxInnerTextNode = null;
-            //int innerLength = 0;
-
-            //儲存所有有圖的節點
-            //fImgFileCandidateList = fHtmlDoc.DocumentNode.Descendants("img").ToList();
-
-            fImgFileCandidateList = (from n in fHtmlDoc.DocumentNode.Descendants("img")
-                                     where n.Attributes["src"] != null
-                                     select n).ToList();
+            HasSplitCharsNodeList = new List<SplitCharsNode>();
+            MaxOuterHtmlNode = null;
+            MaxInnerTextNode = null;
 
             //儲存所有的節點
-            List<HtmlNode> tempAllTagNodeList = fHtmlDoc.DocumentNode.DescendantsAndSelf().ToList();
-
-            #region 舊版
-            //如果有article節點就挑他來找內文
-            //HtmlNode articleNode = fHtmlDoc.DocumentNode.Descendants("article").FirstOrDefault();
-            //if (articleNode != null)
-            //{
-            //    List<HtmlNode> tempAllTagNodeForArticleList = new List<HtmlNode>();
-            //    tempAllTagNodeForArticleList = articleNode.Descendants("article").ToList();
-            //    if (tempAllTagNodeForArticleList != null || tempAllTagNodeForArticleList.Count > 0)
-            //    {
-            //        getSplitCharsNodeList(tempAllTagNodeForArticleList);
-            //    }
-            //    else
-            //    {
-            //        getSplitCharsNodeList(tempAllTagNodeList);
-            //    }        
-            //}
-            //else
-            //{
-            //    getSplitCharsNodeList(tempAllTagNodeList);
-            //}
-            #endregion
+            var tempAllTagNodeList = HtmlDoc.DocumentNode.DescendantsAndSelf().ToList();
 
             //取得有分割字元結點的List
             GetSplitCharsNodeList(tempAllTagNodeList);
 
-            //為了尋找fb客製化的影片，所以將所有節點都存起來
-            fTarTagDataList = tempAllTagNodeList;
-
-            #region 取得有分割字元結點的List(沒用了)
-            //foreach (var tagNode in tempAllTagNodeList)
-            //{
-            //    //只需要作Element型態的即可
-            //    if (tagNode.NodeType == HtmlAgilityPack.HtmlNodeType.Element)
-            //    {
-            //        string tempTagName = tagNode.Name.ToLower();
-
-
-
-            //        if ((tempTagName == "table") || (tempTagName == "div") || (tempTagName == "section"))
-            //        {
-            //            //有內文，才作儲存，找圖用
-            //            if (!string.IsNullOrEmpty(tagNode.InnerText.Trim()))
-            //            {
-            //                //儲存有內文的節點
-            //                fTarTagDataList.Add(tagNode);
-            //            }
-
-            //            //找出最大內文節點
-            //            if (fMaxOuterHtmlNode == null || tagNode.OuterHtml.Length > fMaxOuterHtmlNode.OuterHtml.Length)
-            //            {
-            //                fMaxOuterHtmlNode = tagNode;
-            //            }
-
-            //            string inn = tagNode.InnerText;
-
-            //            //Html的段落字元數
-            //            int htmlPartStringCount = 0;
-
-
-            //            //Regex r = new Regex("<p>");
-            //            //htmlPartStringCount = r.Matches(tagNode.InnerHtml).Count;
-
-            //            //計算<p> <br> 的次數
-            //            foreach (string s in SPLIT_STRINGS)
-            //            {
-            //                Regex r = new Regex(s);
-            //                htmlPartStringCount += r.Matches(tagNode.InnerHtml).Count;
-            //            }
-
-
-            //            //計算有幾個分割字元
-            //            var splitCount = inn.Split(SPLIT_CHARS).Length;
-
-            //            //分割字元與Html的段落字元數相加
-            //            splitCount +=  htmlPartStringCount;
-
-            //            //如果有分割字元
-            //            if (splitCount > 1)
-            //            {
-            //                //內文斷句在innerLength的比例
-            //                double tempSentenceProportion = ((double)splitCount / inn.Length);  
-
-            //                //存入List
-            //                fHasSplitCharsNodeList.Add(new TextImgDomModel_SplitCharsNode() { Node = tagNode, SentenceProportion = tempSentenceProportion, SplitCount = splitCount });
-
-            //            }
-
-            //            //如果沒有分割字元
-            //            //if (fHasSplitCharsNodeList.Count == 0)
-            //            //{
-            //            //    inn = inn.Replace("\n", "");
-            //            //    inn = inn.Replace("\t", "");
-            //            //    inn = inn.Replace(" ", "");
-            //            //    //將長度最長的節點存入
-            //            //    if (inn.Length > innerLength)
-            //            //    {
-            //            //        fMaxInnerTextNode = tagNode;
-
-            //            //        innerLength = inn.Length;
-            //            //    }
-            //            //}
-            //        }
-            //    }
-            //}
-            #endregion
-
-            if (fHasSplitCharsNodeList.Count > 0)
+            if (HasSplitCharsNodeList.Count > 0)
             {
-                //getMainTextNodeBySentenceProportion(tempCommaCount);
-
-                //getMainTextNodeByNoChildNode();
                 getMainTextNodeByRealSplitCount();
-
-                //var test = (from n in fHasSplitCharsNodeList
-                //            where n.SplitCount > 0
-                //            orderby n.SplitCount
-                //            select n).ToList();
             }
             else
             {
                 //看有沒有被濾掉的FormNode
-                if (fFormNodeList != null && fFormNodeList.Count > 0)
+                if (_formNodeList != null && _formNodeList.Count > 0)
                 {
-                    var mainFormNode = (from n in fFormNodeList
+                    var mainFormNode = (from n in _formNodeList
                                         orderby n.XPath.Length ascending
                                         select n).ToList().FirstOrDefault();
 
-                    List<HtmlNode> formTagNodeList = mainFormNode.DescendantsAndSelf().ToList();
+                    var formTagNodeList = mainFormNode.DescendantsAndSelf().ToList();
                     GetSplitCharsNodeList(formTagNodeList);
 
-                    if (fHasSplitCharsNodeList.Count > 0)
+                    if (HasSplitCharsNodeList.Count > 0)
                     {
                         getMainTextNodeByRealSplitCount();
                     }
@@ -493,30 +247,6 @@ namespace ContentExtractor
         #endregion
 
         /// <summary>
-        /// 確定是否要用Browser去解析
-        /// 注意：這裡是做網頁特例所在，以後如果有要用WebBrowser去做的部分要在這裡加條件
-        /// </summary>
-        /// <returns>是否要用WebBrowser</returns>
-        public bool IdentifyUseBrowserOrNot()
-        {
-            bool result = false;
-
-            //這個網站的RSS： http://www.thisiscolossal.com/ 
-            //使用WordPress的lazy load三方插件，他的特徵是原本Image tag的src是亂碼
-            //引用javaScript後把實際圖片網址連結編入src內，而實際圖片網址連結是放在data-lazy-src內
-            var dataLazyImg = (from candidateImg in fImgFileCandidateList
-                               where candidateImg.Attributes.Contains("data-lazy-src")
-                               select candidateImg).FirstOrDefault();
-
-            if (dataLazyImg != null)
-            {
-                result = true;
-            }
-
-            return result;
-        }
-
-        /// <summary>
         /// 取得有分割字元節點的List
         /// </summary>
         /// <param name="tempAllTagNodeList"></param>
@@ -525,68 +255,40 @@ namespace ContentExtractor
             foreach (var tagNode in tempAllTagNodeList)
             {
                 //只需要作Element型態的即可
-                if (tagNode.NodeType == HtmlAgilityPack.HtmlNodeType.Element)
+                if (tagNode.NodeType != HtmlNodeType.Element) continue;
+
+                var tempTagName = tagNode.Name.ToLower();
+
+                if ((tempTagName != "table") && (tempTagName != "div") && (tempTagName != "section")) continue;
+
+                //找出最大內文節點
+                if (MaxOuterHtmlNode == null || tagNode.OuterHtml.Length > MaxOuterHtmlNode.OuterHtml.Length)
                 {
-                    string tempTagName = tagNode.Name.ToLower();
-                    //string nodeClassString = "";
-
-                    //if (tagNode.Attributes["class"] != null)
-                    //{
-                    //    nodeClassString = tagNode.Attributes["class"].Value.ToLower();
-                    //}
-                    // (濾掉class或是Id包含 "footer" 的測試)
-                    //if ((tempTagName == "table") || (tempTagName == "div") || (tempTagName == "section") && !tagNode.Id.Contains("footer") && !nodeClassString.Contains("footer"))
-                    if ((tempTagName == "table") || (tempTagName == "div") || (tempTagName == "section"))
-                    {
-                        //有內文，才作儲存，找圖用
-                        if (!string.IsNullOrEmpty(tagNode.InnerText.Trim()))
-                        {
-                            //儲存有內文的節點
-                            fTarTagDataList.Add(tagNode);
-                        }
-
-                        //找出最大內文節點
-                        if (fMaxOuterHtmlNode == null || tagNode.OuterHtml.Length > fMaxOuterHtmlNode.OuterHtml.Length)
-                        {
-                            fMaxOuterHtmlNode = tagNode;
-                        }
-
-                        string inn = tagNode.InnerText;
-
-                        //Html的段落字元數
-                        int htmlPartStringCount = 0;
-
-
-                        //Regex r = new Regex("<p>");
-                        //htmlPartStringCount = r.Matches(tagNode.InnerHtml).Count;
-
-                        //計算<p> <br> 的次數
-                        foreach (string s in SPLIT_STRINGS)
-                        {
-                            Regex r = new Regex(s);
-                            htmlPartStringCount += r.Matches(tagNode.InnerHtml).Count;
-                        }
-
-
-                        //計算有幾個分割字元
-                        var splitCount = inn.Split(SPLIT_CHARS).Length;
-
-                        //分割字元與Html的段落字元數相加
-                        splitCount += htmlPartStringCount;
-
-                        //如果有分割字元
-                        if (splitCount > 1)
-                        {
-                            //內文斷句在innerLength的比例
-                            double tempSentenceProportion = ((double)splitCount / inn.Length);
-
-                            //存入List
-                            fHasSplitCharsNodeList.Add(new SplitCharsNode() { Node = tagNode, SentenceProportion = tempSentenceProportion, SplitCount = splitCount });
-
-                        }
-
-                    }
+                    MaxOuterHtmlNode = tagNode;
                 }
+
+                var inn = tagNode.InnerText;
+
+                //Html的段落字元數 計算<p> <br> 的次數
+                var htmlPartStringCount = _splitStrings
+                    .Select(s => new Regex(s))
+                    .Select(r => r.Matches(tagNode.InnerHtml).Count)
+                    .Sum();
+
+                //計算有幾個分割字元
+                var splitCount = inn.Split(_splitChars).Length;
+
+                //分割字元與Html的段落字元數相加
+                splitCount += htmlPartStringCount;
+
+                //如果有分割字元
+                if (splitCount <= 1) continue;
+
+                //內文斷句在innerLength的比例
+                var tempSentenceProportion = ((double)splitCount / inn.Length);
+
+                //存入List
+                HasSplitCharsNodeList.Add(new SplitCharsNode() { Node = tagNode, SentenceProportion = tempSentenceProportion, SplitCount = splitCount });
             }
         }
 
@@ -597,14 +299,14 @@ namespace ContentExtractor
         /// </summary>
         private void getMainTextNodeBySentenceProportion()
         {
-            var tempSplitCount = (from n in fHasSplitCharsNodeList
+            var tempSplitCount = (from n in HasSplitCharsNodeList
                                   orderby n.SplitCount descending
                                   select n.SplitCount).FirstOrDefault();
 
             //內文斷句在innerLength的比例
             double sentenceProportion = 0;
 
-            foreach (var spNode in fHasSplitCharsNodeList)
+            foreach (var spNode in HasSplitCharsNodeList)
             {
                 //將最多分割字元的節點存入   (斷句長度在最大長度的1/3)
                 if (spNode.SplitCount > tempSplitCount / 3)
@@ -613,7 +315,7 @@ namespace ContentExtractor
                     if (spNode.SentenceProportion > sentenceProportion)
                     {
                         sentenceProportion = spNode.SentenceProportion;
-                        fMaxInnerTextNode = spNode.Node;
+                        MaxInnerTextNode = spNode.Node;
                     }
                 }
             }
@@ -624,25 +326,23 @@ namespace ContentExtractor
         /// </summary>
         private void getMainTextNodeByNoChildNode()
         {
-            int tempSplitCount = 0;
+            var tempSplitCount = 0;
             //內文斷句在innerLength的比例
             //double sentenceProportion = 0;
 
-            foreach (var spNode in fHasSplitCharsNodeList)
+            foreach (var spNode in HasSplitCharsNodeList)
             {
-                var checkPrentNode = (from n in fHasSplitCharsNodeList
-                                      where n.Node != spNode.Node && n.Node.XPath.Contains(spNode.Node.XPath)
-                                      select n).FirstOrDefault();
-                //如果再List裡沒有子節點
-                if (checkPrentNode == null)
-                {
-                    //將最多分割字元的節點存入
-                    if (spNode.SplitCount > tempSplitCount)
-                    {
-                        tempSplitCount = spNode.SplitCount;
-                        fMaxInnerTextNode = spNode.Node;
-                    }
-                }
+                var checkParentNode = (
+                    from n in HasSplitCharsNodeList
+                    where n.Node != spNode.Node && n.Node.XPath.Contains(spNode.Node.XPath)
+                    select n).FirstOrDefault();
+
+
+                if (checkParentNode != null) continue;
+                if (spNode.SplitCount <= tempSplitCount) continue;
+
+                tempSplitCount = spNode.SplitCount;
+                MaxInnerTextNode = spNode.Node;
             }
         }
 
@@ -653,34 +353,32 @@ namespace ContentExtractor
         {
 
             //排序 從上層節點開始
-            var realNode = (from n in fHasSplitCharsNodeList
-                            orderby n.Node.XPath.Length ascending
-                            select n);
+            var realNode =
+                from n in HasSplitCharsNodeList
+                orderby n.Node.XPath.Length ascending
+                select n;
 
             foreach (var spNode in realNode)
             {
                 //選出同棵樹中最接近的父代節點
-                var checkLastNode = (from n in fHasSplitCharsNodeList
-                                     where n.Node != spNode.Node && spNode.Node.XPath.Contains(n.Node.XPath)
-                                     orderby n.Node.XPath.Length descending
-                                     select n).FirstOrDefault();
+                var checkLastNode = (
+                    from n in HasSplitCharsNodeList
+                    where n.Node != spNode.Node && spNode.Node.XPath.Contains(n.Node.XPath)
+                    orderby n.Node.XPath.Length descending
+                    select n).FirstOrDefault();
 
                 if (checkLastNode != null)
                 {
                     checkLastNode.SplitCount -= spNode.SplitCount;
-
                 }
-
-
             }
-            fMaxInnerTextNode = (from n in fHasSplitCharsNodeList
-                                 orderby n.SplitCount descending, n.Node.InnerText.Length descending
-                                 select n.Node).FirstOrDefault();
 
-            //fMaxInnerTextNode = (from n in fHasSplitCharsNodeList
-            //                     orderby n.SplitCount descending , n.SentenceProportion descending
-            //                     select n.Node).FirstOrDefault();
+            MaxInnerTextNode = (
+                from n in HasSplitCharsNodeList
+                orderby n.SplitCount descending, n.Node.InnerText.Length descending
+                select n.Node).FirstOrDefault();
         }
+
         #endregion
 
         #region 建構物件時 移除傳入資料中指定的Tag , Pattern...etc
@@ -691,27 +389,19 @@ namespace ContentExtractor
         /// 移除註解 (HtmlDocument)
         /// </summary>
         /// <returns></returns>
-        private HtmlAgilityPack.HtmlDocument removeComments()
+        private HtmlDocument removeComments()
         {
-            if (fHtmlDoc != null)
+            if (HtmlDoc == null) return HtmlDoc;
+
+            var selectNode = HtmlDoc.DocumentNode.SelectNodes("//comment()");
+            if (selectNode == null) return HtmlDoc;
+
+            foreach (var comment in selectNode)
             {
-                var selectNode = fHtmlDoc.DocumentNode.SelectNodes("//comment()");
-                if (selectNode != null)
-                {
-                    foreach (HtmlNode comment in selectNode)
-                    {
-                        comment.ParentNode.RemoveChild(comment);
-                    }
-
-                    //HtmlAgilityPack.HtmlDocument fHtmlDocTest = new HtmlAgilityPack.HtmlDocument();
-                    //fHtmlDocTest.LoadHtml(fHtmlDoc.DocumentNode.OuterHtml);
-
-                    //var selectNodeTest = fHtmlDocTest.DocumentNode.SelectNodes("//comment()");
-                }
-
+                comment.ParentNode.RemoveChild(comment);
             }
 
-            return fHtmlDoc;
+            return HtmlDoc;
         }
 
         #endregion
@@ -725,41 +415,27 @@ namespace ContentExtractor
         /// <returns></returns>
         private void removeTags(List<string> tagList)
         {
-            if (fHtmlDoc != null)
+            if (HtmlDoc == null) return;
+
+            var x = HtmlDoc.DocumentNode.DescendantsAndSelf().ToList();
+
+            //重要---必須用此方式改變參數設定  form才會有childNode
+            //HtmlAgilityPack是針對HTML 3.2的規範，而HTML 3.2就是規定。 對於option，form等tag，其默認處理的结果是：其下的子節點，會變成sibling   2013/8/8  Jerry
+            HtmlNode.ElementsFlags.Remove("form");
+
+            foreach (var tag in x)
             {
-                var x = fHtmlDoc.DocumentNode.DescendantsAndSelf().ToList();
+                if (tag.NodeType != HtmlNodeType.Element) continue;
 
-                //重要---必須用此方式改變參數設定  form才會有childNode
-                //HtmlAgilityPack是針對HTML 3.2的規範，而HTML 3.2就是規定。 對於option，form等tag，其默認處理的结果是：其下的子節點，會變成sibling   2013/8/8  Jerry
-                HtmlNode.ElementsFlags.Remove("form");
+                if (!tagList.Contains(tag.Name)) continue;
 
-                //var selectTest = fHtmlDoc.DocumentNode.Descendants("form").ToList();
-                //if (selectTest != null && selectTest.Count != 0)
-                //{
-                //}
-                foreach (var tag in x)
+                //如果是formNode的話存到list  所有node被濾掉時使用
+                if (tag.Name == "form")
                 {
-                    if (tag.NodeType == HtmlNodeType.Element)
-                    {
-                        if (tagList.Contains(tag.Name))
-                        {
-                            //如果是formNode的話存到list  所有node被濾掉時使用
-                            if (tag.Name == "form")
-                            {
-                                fFormNodeList.Add(tag);
-                            }
-
-                            tag.Remove();
-
-                        }
-                    }
+                    _formNodeList.Add(tag);
                 }
 
-                //HtmlAgilityPack.HtmlDocument fHtmlDocTest = new HtmlAgilityPack.HtmlDocument();
-                //fHtmlDocTest.LoadHtml(fHtmlDoc.DocumentNode.OuterHtml);
-
-                //var selectNodeTest = fHtmlDocTest.DocumentNode.Descendants("form").ToList();
-
+                tag.Remove();
             }
 
         }
@@ -776,9 +452,9 @@ namespace ContentExtractor
         /// <returns></returns>
         private string removePattern(string inputString, string rePa)
         {
-            List<string> pa = rePa.Split(',').ToList();
+            var pa = rePa.Split(',').ToList();
 
-            foreach (string s in pa)
+            foreach (var s in pa)
             {
                 if (s.Length > 0)
                 {
@@ -799,9 +475,9 @@ namespace ContentExtractor
         /// </summary>
         /// <param name="tagName"></param>
         /// <returns></returns>
-        public List<HtmlAgilityPack.HtmlNode> GetTagWithName(string tagName)
+        public List<HtmlNode> GetTagWithName(string tagName)
         {
-            var resultAll = fHtmlDoc.DocumentNode
+            var resultAll = HtmlDoc.DocumentNode
                                     .Descendants(tagName)
                                     .Select(n => n).ToList();
 
@@ -817,18 +493,18 @@ namespace ContentExtractor
         /// </summary>
         /// <param name="tagName"></param>
         /// <returns></returns>
-        public List<HtmlAgilityPack.HtmlNode> GetTagListFromHead(string tagName, List<string> attribute, List<string> value)
+        public List<HtmlNode> GetTagListFromHead(string tagName, List<string> attribute, List<string> value)
         {
 
-            List<HtmlAgilityPack.HtmlNode> resultAll = new List<HtmlAgilityPack.HtmlNode>();
+            var resultAll = new List<HtmlNode>();
 
-            for (int a = 1; a < 20; a++)
+            for (var a = 1; a < 20; a++)
             {
-                string s = string.Format("//head/{0}[{1}]", tagName, a);
+                var s = string.Format("//head/{0}[{1}]", tagName, a);
 
-                if (fHtmlDoc.DocumentNode.SelectNodes(s) != null)
+                if (HtmlDoc.DocumentNode.SelectNodes(s) != null)
                 {
-                    resultAll.Add(fHtmlDoc.DocumentNode.SelectNodes(s)[0]);
+                    resultAll.Add(HtmlDoc.DocumentNode.SelectNodes(s)[0]);
                 }
                 else
                 {
@@ -836,7 +512,7 @@ namespace ContentExtractor
                 }
             }
 
-            List<HtmlAgilityPack.HtmlNode> result = new List<HtmlAgilityPack.HtmlNode>();
+            var result = new List<HtmlNode>();
 
             if ((attribute.Count > 0) && (attribute[0].Length > 0))
             {
@@ -846,7 +522,7 @@ namespace ContentExtractor
                     {
                         if (x.Attributes[y] != null)
                         {
-                            bool esp = false;
+                            var esp = false;
 
                             if ((value.Count > 0) && (value[0].Length > 0))
                             {
@@ -898,19 +574,19 @@ namespace ContentExtractor
         /// </summary>
         /// <param name="tagName"></param>
         /// <returns></returns>
-        public List<HtmlAgilityPack.HtmlNode> GetTagList(string tagName, List<string> attribute, List<string> value)
+        public List<HtmlNode> GetTagList(string tagName, List<string> attribute, List<string> value)
         {
 
-            List<HtmlAgilityPack.HtmlNode> resultAll = new List<HtmlAgilityPack.HtmlNode>();
+            var resultAll = new List<HtmlNode>();
 
-            for (int a = 1; a < 20; a++)
+            for (var a = 1; a < 20; a++)
             {
-                string s = string.Format("//body/{0}[{1}]", tagName, a);
+                var s = string.Format("//body/{0}[{1}]", tagName, a);
 
-                if (fHtmlDoc.DocumentNode.SelectNodes(s) != null)
+                if (HtmlDoc.DocumentNode.SelectNodes(s) != null)
                 {
 
-                    resultAll.Add(fHtmlDoc.DocumentNode.SelectNodes(s)[0]);
+                    resultAll.Add(HtmlDoc.DocumentNode.SelectNodes(s)[0]);
                 }
                 else
                 {
@@ -918,7 +594,7 @@ namespace ContentExtractor
                 }
             }
 
-            List<HtmlAgilityPack.HtmlNode> result = new List<HtmlAgilityPack.HtmlNode>();
+            var result = new List<HtmlNode>();
 
             if ((attribute.Count > 0) && (attribute[0].Length > 0))
             {
@@ -928,7 +604,7 @@ namespace ContentExtractor
                     {
                         if (x.Attributes[y] != null)
                         {
-                            bool esp = false;
+                            var esp = false;
 
                             if ((value.Count > 0) && (value[0].Length > 0))
                             {
