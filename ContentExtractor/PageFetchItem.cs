@@ -17,19 +17,20 @@ namespace ContentExtractor
     {
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
+        /// <summary>
+        /// 解析出來的最大本文節點
+        /// </summary>
         private HtmlNode _targetTextNode;
 
-        private List<HtmlNode> _downloadTextNodes;
+        /// <summary>
+        /// 解析出來的所有下載節點
+        /// </summary>
+        private List<HtmlNode> _downloadLinkNodes;
 
         /// <summary>
         /// 優先編碼字典
         /// </summary>
         private readonly Dictionary<int, Encoding> _highPriorityEncode = new Dictionary<int, Encoding>();
-
-        /// <summary>
-        /// 是否成功取得
-        /// </summary>
-        public bool IsFetched => _targetTextNode != null;
 
         /// <summary>
         /// ctor
@@ -48,6 +49,8 @@ namespace ContentExtractor
             _highPriorityEncode.Add(65001, Encoding.GetEncoding(65001));
         }
 
+        #region Public Properties
+        
         /// <summary>
         /// 工作索引號
         /// </summary>
@@ -75,6 +78,15 @@ namespace ContentExtractor
             set;
         }
 
+        /// <summary>
+        /// 是否成功取得
+        /// </summary>
+        public bool IsFetched => _targetTextNode != null || _downloadLinkNodes?.Count > 0;
+
+        #endregion
+
+        #region Public Methods
+        
         /// <summary>
         /// 解析最大內文
         /// </summary>
@@ -151,7 +163,7 @@ namespace ContentExtractor
 
             //解析下載清單
             var dTree = new DomTree(context);
-            _downloadTextNodes = dTree.ExtractBigTableLinkNodes(limitChildDepth);
+            _downloadLinkNodes = dTree.ExtractBigTableLinkNodes(limitChildDepth);
         }
 
         /// <summary>
@@ -160,11 +172,13 @@ namespace ContentExtractor
         /// <returns></returns>
         public List<Tuple<string, string>> GetDownloadList(bool isReversed = false)
         {
-            var result = _downloadTextNodes?
+            var result = _downloadLinkNodes?
                 .Select(n => new Tuple<string, string>(n.Attributes["href"].Value, n.InnerText));
 
             return isReversed ? result?.Reverse().ToList() : result?.ToList();
         }
+
+        #endregion
 
         #region HttpRequest抓取網頁內容
 

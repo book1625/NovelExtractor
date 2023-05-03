@@ -44,7 +44,6 @@
   <ItemGroup>
     <Compile Include="FetchItemTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="FetchJobTests.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="MSTest.TestAdapter">

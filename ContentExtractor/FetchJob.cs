@@ -46,17 +46,7 @@ namespace ContentExtractor
             }).ToList();
         }
 
-        /// <summary>
-        /// 取得當前所有截取工作的 url
-        /// </summary>
-        /// <returns></returns>
-        public List<string> GetUrls()
-        {
-            lock (_operationLock)
-            {
-                return _allItems.Select(x => x.Url).ToList();
-            }
-        }
+        #region Public Methods
 
         /// <summary>
         /// 開始進行截取工作
@@ -193,6 +183,8 @@ namespace ContentExtractor
         {
             return _allItems.Select(item => new Tuple<int, bool, string, int>(item.Index, item.IsFetched, item.Title, item.GetRoughContextLen())).ToList();
         }
+
+        #endregion
 
         #region events
 
