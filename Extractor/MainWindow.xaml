@@ -37,6 +37,7 @@
             Background="DarkSeaGreen">
             <TextBlock Margin="5" Text="目標網頁：" />
             <TextBox Margin="5" Text="{Binding TargetUrl, Mode=TwoWay}" />
+            <CheckBox IsChecked="{Binding IsReservedList, Mode=TwoWay}" >是否反轉清單排序</CheckBox>
             <Button Margin="5" Command="{Binding ParseCommand}">解析清單</Button>
             <StackPanel Margin="5" Orientation="Horizontal">
                 <TextBlock>

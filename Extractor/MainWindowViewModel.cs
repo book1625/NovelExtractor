@@ -117,6 +117,19 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+    private bool _isReservedList;
+
+    public bool IsReservedList
+    {
+        get => _isReservedList;
+        set
+        {
+            if(_isReservedList == value) return;
+            _isReservedList = value;
+            OnPropertyChanged();
+        }
+    }
+
     #endregion
 
     #region Public command
@@ -144,7 +157,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         };
 
         parse.ParseDownloadList();
-        var download = parse.GetDownloadList();
+        var download = parse.GetDownloadList(_isReservedList);
 
         var tarList = download.Select(d => new Tuple<string, string>($"{url.Scheme}://{url.Host}{d.Item1}", d.Item2))
 #if DEBUG
