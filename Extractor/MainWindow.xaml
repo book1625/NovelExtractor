@@ -37,7 +37,7 @@
             Background="DarkSeaGreen">
             <TextBlock Margin="5" Text="目標網頁：" />
             <TextBox Margin="5" Text="{Binding TargetUrl, Mode=TwoWay}" />
-            <CheckBox IsChecked="{Binding IsReservedList, Mode=TwoWay}" >是否反轉清單排序</CheckBox>
+            <CheckBox IsChecked="{Binding IsReservedList, Mode=TwoWay}">是否反轉清單排序</CheckBox>
             <Button Margin="5" Command="{Binding ParseCommand}">解析清單</Button>
             <StackPanel Margin="5" Orientation="Horizontal">
                 <TextBlock>
@@ -48,6 +48,7 @@
                         </MultiBinding>
                     </TextBlock.Text>
                 </TextBlock>
+                <TextBlock Foreground="Red" Text="{Binding FailCount, StringFormat='{} ({0})'}" />
             </StackPanel>
             <Button Margin="5" Command="{Binding RunCommand}">開始下載</Button>
             <Button Margin="5" Command="{Binding StopCommand}">暫停下載</Button>
@@ -79,7 +80,14 @@
                                 Text="{Binding RoundCount}"
                                 TextAlignment="Right" />
 
-                            <TextBlock Margin="10,0,0,0" Text="{Binding Title}" />
+                            <TextBlock Margin="10,0,0,0">
+                                <Hyperlink NavigateUri="{Binding Link}" RequestNavigate="Hyperlink_OnRequestNavigate">
+                                    <Hyperlink.Inlines>
+                                        <Run Text="{Binding Title}" Foreground="GreenYellow"/>
+                                    </Hyperlink.Inlines>
+                                </Hyperlink>
+                            </TextBlock>
+
                         </StackPanel>
                     </DataTemplate>
                 </ItemsControl.ItemTemplate>

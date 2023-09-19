@@ -17,9 +17,9 @@ public class MainWindowViewModel : INotifyPropertyChanged
     /// <param name="display"></param>
     public MainWindowViewModel(Action<string> display)
     {
-        _targetUrl = string.Empty;
-        _bookName = string.Empty;
-        _author = string.Empty;
+        targetUrl = string.Empty;
+        bookName = string.Empty;
+        author = string.Empty;
         _currJob = null;
 
         DisplayMessage = display;
@@ -37,95 +37,108 @@ public class MainWindowViewModel : INotifyPropertyChanged
     /// </summary>
     public Action<string> DisplayMessage { get; set; }
 
-    private string _targetUrl;
+    private string targetUrl;
 
     /// <summary>
     /// 目標網址
     /// </summary>
     public string TargetUrl
     {
-        get => _targetUrl;
+        get => targetUrl;
         set
         {
-            if (value == _targetUrl) return;
-            _targetUrl = value;
+            if (value == targetUrl) return;
+            targetUrl = value;
             OnPropertyChanged();
         }
     }
 
-    private int _currentIndex;
+    private int currentIndex;
 
     /// <summary>
     /// 當前的工作項
     /// </summary>
     public int CurrentIndex
     {
-        get => _currentIndex;
+        get => currentIndex;
         set
         {
-            if (_currentIndex == value) return;
-            _currentIndex = value;
+            if (currentIndex == value) return;
+            currentIndex = value;
             OnPropertyChanged();
         }
     }
 
-    private int _allCount;
+    private int allCount;
 
     /// <summary>
     /// 工作項總量
     /// </summary>
     public int AllCount
     {
-        get => _allCount;
+        get => allCount;
         set
         {
-            if (_allCount == value) return;
-            _allCount = value;
+            if (allCount == value) return;
+            allCount = value;
             OnPropertyChanged();
         }
     }
 
-    private string _bookName;
+    private int failCount;
+
+    public int FailCount
+    {
+        get => failCount;
+        set
+        {
+            if (failCount == value) return;
+            failCount = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private string bookName;
 
     /// <summary>
     /// 書名
     /// </summary>
     public string BookName
     {
-        get => _bookName;
+        get => bookName;
         set
         {
-            if (value == _bookName) return;
-            _bookName = value;
+            if (value == bookName) return;
+            bookName = value;
             OnPropertyChanged();
         }
     }
 
-    private string _author;
+    private string author;
 
     /// <summary>
     /// 作者名
     /// </summary>
     public string Author
     {
-        get => _author;
+        get => author;
         set
         {
-            if (_author == value) return;
-            _author = value;
+            if (author == value) return;
+            author = value;
             OnPropertyChanged();
         }
     }
 
-    private bool _isReservedList;
+    private bool isReservedList;
 
     public bool IsReservedList
     {
-        get => _isReservedList;
+        get => isReservedList;
         set
         {
-            if(_isReservedList == value) return;
-            _isReservedList = value;
+            if (isReservedList == value) return;
+            isReservedList = value;
             OnPropertyChanged();
         }
     }
@@ -157,7 +170,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         };
 
         parse.ParseDownloadList();
-        var download = parse.GetDownloadList(_isReservedList);
+        var download = parse.GetDownloadList(isReservedList);
 
         var tarList = download.Select(d => new Tuple<string, string>($"{url.Scheme}://{url.Host}{d.Item1}", d.Item2))
 #if DEBUG
@@ -171,12 +184,13 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         DownloadList.Clear();
         _currJob.GetAllFetchStatus().Select(state => new DownloadItem()
-            {
-                Index = state.Item1,
-                IsFetched = state.Item2,
-                Title = state.Item3,
-                RoundCount = state.Item4
-            })
+        {
+            Index = state.Item1,
+            IsFetched = state.Item2,
+            Title = state.Item3,
+            RoundCount = state.Item4,
+            Link = new Uri(state.Item5)
+        })
             .ToList()
             .ForEach(d => DownloadList.Add(d));
 
@@ -251,6 +265,8 @@ public class MainWindowViewModel : INotifyPropertyChanged
             d.IsFetched = item.IsFetched;
             d.RoundCount = item.GetRoughContextLen();
         });
+
+        FailCount = DownloadList.Count(d => !d.IsFetched);
     }
 
     //工作完成事件
@@ -335,6 +351,22 @@ public class DownloadItem : INotifyPropertyChanged
         {
             if (value == _roundCount) return;
             _roundCount = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private Uri _link;
+
+    /// <summary>
+    /// 下載超連結
+    /// </summary>
+    public Uri Link
+    {
+        get => _link;
+        set
+        {
+            if (value == _link) return;
+            _link = value;
             OnPropertyChanged();
         }
     }

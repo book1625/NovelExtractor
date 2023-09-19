@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 using System.Windows.Media;
+using System.Windows.Navigation;
 using System.Windows.Threading;
 
 namespace Extractor
@@ -26,6 +28,11 @@ namespace Extractor
                 return;
             }
             MessageDisplayBox.AppendText($"{message}{Environment.NewLine}");
+        }
+
+        private void Hyperlink_OnRequestNavigate(object sender, RequestNavigateEventArgs e)
+        {
+            Process.Start(new ProcessStartInfo { FileName = e.Uri.ToString(), UseShellExecute = true });
         }
     }
 
