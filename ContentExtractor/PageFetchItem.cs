@@ -20,17 +20,17 @@ namespace ContentExtractor
         /// <summary>
         /// 解析出來的最大本文節點
         /// </summary>
-        private HtmlNode _targetTextNode;
+        private HtmlNode targetTextNode;
 
         /// <summary>
         /// 解析出來的所有下載節點
         /// </summary>
-        private List<HtmlNode> _downloadLinkNodes;
+        private List<HtmlNode> downloadLinkNodes;
 
         /// <summary>
         /// 優先編碼字典
         /// </summary>
-        private readonly Dictionary<int, Encoding> _highPriorityEncode = new Dictionary<int, Encoding>();
+        private readonly Dictionary<int, Encoding> highPriorityEncode = new Dictionary<int, Encoding>();
 
         /// <summary>
         /// ctor
@@ -40,13 +40,13 @@ namespace ContentExtractor
             //以下初始化優先處理的編碼
 
             //big5
-            //_highPriorityEncode.Add(950, Encoding.GetEncoding(950));
+            //highPriorityEncode.Add(950, Encoding.GetEncoding(950));
 
             //GB18030 簡體中文
-            //_highPriorityEncode.Add(54936, Encoding.GetEncoding(54936));
+            //highPriorityEncode.Add(54936, Encoding.GetEncoding(54936));
 
             //UTF 8
-            _highPriorityEncode.Add(65001, Encoding.GetEncoding(65001));
+            highPriorityEncode.Add(65001, Encoding.GetEncoding(65001));
         }
 
         #region Public Properties
@@ -81,7 +81,7 @@ namespace ContentExtractor
         /// <summary>
         /// 是否成功取得
         /// </summary>
-        public bool IsFetched => _targetTextNode != null || _downloadLinkNodes?.Count > 0;
+        public bool IsFetched => targetTextNode != null || downloadLinkNodes?.Count > 0;
 
         #endregion
 
@@ -93,7 +93,7 @@ namespace ContentExtractor
         public void ParseTextContext()
         {
             var context = GetHtmlContent(
-                _highPriorityEncode,
+                highPriorityEncode,
                 Url,
                 20000,
                 out var errorCode,
@@ -105,7 +105,7 @@ namespace ContentExtractor
             //抽出最大內文節點
             var dTree = new DomTree(context);
             dTree.InitMaxOuterHtmlAndMaxInnerTextNodeV2();
-            _targetTextNode = dTree.MaxInnerTextNode;
+            targetTextNode = dTree.MaxInnerTextNode;
         }
 
         /// <summary>
@@ -114,10 +114,14 @@ namespace ContentExtractor
         /// <returns></returns>
         public string[] GetContext()
         {
-            if (_targetTextNode == null) return null;
+            if (targetTextNode == null
+                || string.IsNullOrEmpty(targetTextNode.InnerText))
+            {
+                return Array.Empty<string>();
+            }
 
             //過濾 HTML 專屬字元
-            var text = _targetTextNode.InnerText
+            var text = targetTextNode.InnerText
                 .Replace("&nbsp;&nbsp;", "\n")
                 .Replace("&quot;", @"""")
                 .Replace("&gt;", ">")
@@ -143,7 +147,7 @@ namespace ContentExtractor
 
         public int GetRoughContextLen()
         {
-            return _targetTextNode?.InnerLength ?? 0;
+            return targetTextNode?.InnerLength ?? 0;
         }
 
         /// <summary>
@@ -152,7 +156,7 @@ namespace ContentExtractor
         public void ParseDownloadList(int limitChildDepth = 5)
         {
             var context = GetHtmlContent(
-                _highPriorityEncode,
+                highPriorityEncode,
                 Url,
                 20000,
                 out var errorCode,
@@ -163,7 +167,7 @@ namespace ContentExtractor
 
             //解析下載清單
             var dTree = new DomTree(context);
-            _downloadLinkNodes = dTree.ExtractBigTableLinkNodes(limitChildDepth);
+            downloadLinkNodes = dTree.ExtractBigTableLinkNodes(limitChildDepth);
         }
 
         /// <summary>
@@ -172,7 +176,7 @@ namespace ContentExtractor
         /// <returns></returns>
         public List<Tuple<string, string>> GetDownloadList(bool isReversed = false)
         {
-            var result = _downloadLinkNodes?
+            var result = downloadLinkNodes?
                 .Select(n => new Tuple<string, string>(n.Attributes["href"].Value, n.InnerText));
 
             return isReversed ? result?.Reverse().ToList() : result?.ToList();

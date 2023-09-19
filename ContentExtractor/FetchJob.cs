@@ -24,12 +24,12 @@ namespace ContentExtractor
         /// <summary>
         /// 記錄所有被要求的工作連結
         /// </summary>
-        private readonly List<PageFetchItem> _allItems;
+        private readonly List<PageFetchItem> allItems;
 
         /// <summary>
         /// 公開方法共用的同步鎖
         /// </summary>
-        private readonly object _operationLock = new object();
+        private readonly object operationLock = new object();
 
         /// <summary>
         /// ctor
@@ -38,7 +38,7 @@ namespace ContentExtractor
         public FetchJob(List<Tuple<string, string>> fetchList)
         {
             var index = 1;
-            _allItems = fetchList.Select(f => new PageFetchItem()
+            allItems = fetchList.Select(f => new PageFetchItem()
             {
                 Index = index++,
                 Url = f.Item1,
@@ -61,12 +61,12 @@ namespace ContentExtractor
 
             Task.Run(() =>
             {
-                lock (_operationLock)
+                lock (operationLock)
                 {
                     try
                     {
                         var counter = 1;
-                        foreach (var fetchItem in _allItems)
+                        foreach (var fetchItem in allItems)
                         {
                             if (cts.IsCancellationRequested) return;
 
@@ -75,13 +75,10 @@ namespace ContentExtractor
                                 fetchItem.ParseTextContext();
 
                                 //如果有發生取得異常，就意思一下先 hold 住不要一直捉
-                                if (!fetchItem.IsFetched) 
-                                    Thread.Sleep(10000);
-                                else 
-                                    Thread.Sleep(DefaultFetchPeriodMs);
+                                Thread.Sleep(!fetchItem.IsFetched ? 10000 : DefaultFetchPeriodMs);
                             }
 
-                            FireOnProcessStatus((double)counter / _allItems.Count, fetchItem);
+                            FireOnProcessStatus((double)counter / allItems.Count, fetchItem);
                             counter++;
                         }
                     }
@@ -91,7 +88,7 @@ namespace ContentExtractor
                         Logger.Error(e);
                     }
 
-                    FireOnProcessCompleted(_allItems.All(x => x.IsFetched));
+                    FireOnProcessCompleted(allItems.All(x => x.IsFetched));
                 }
             }, cts.Token);
         }
@@ -124,13 +121,18 @@ namespace ContentExtractor
 
                 using (var sw = new StreamWriter(tarFile.Create()))
                 {
-                    foreach (var fetchItem in _allItems)
+                    foreach (var fetchItem in allItems)
                     {
                         sw.WriteLine(fetchItem.Title);
                         sw.WriteLine();
 
                         foreach (var contextItem in fetchItem.GetContext())
                         {
+                            if (!contextItem.Any())
+                            {
+                                Logger.Warn($"Empty Item : [{fetchItem.Index}][{fetchItem.Title}]{fetchItem.Url}");
+                                continue;
+                            }
                             sw.WriteLine(contextItem);
                             sw.WriteLine();
                         }
@@ -170,9 +172,16 @@ namespace ContentExtractor
 
                 var doc = new Epub(bookName, authName);
 
-                foreach (var pageFetchItem in _allItems)
+                foreach (var pageFetchItem in allItems)
                 {
-                    var epubContext = pageFetchItem.GetContext().Select(s => $"<p>{s}</p>");
+                    var context = pageFetchItem.GetContext();
+                    if (!context.Any())
+                    {
+                        Logger.Warn($"Empty Item : [{pageFetchItem.Index}][{pageFetchItem.Title}]{pageFetchItem.Url}");
+                        continue;
+                    }
+
+                    var epubContext =context.Select(s => $"<p>{s}</p>");
                     doc.AddSection(pageFetchItem.Title, $"<h2>{pageFetchItem.Title}</h2> {string.Join(" ", epubContext)}");
                 }
 
@@ -195,9 +204,9 @@ namespace ContentExtractor
         /// 取得當下的截取狀態
         /// </summary>
         /// <returns></returns>
-        public List<Tuple<int, bool, string, int>> GetAllFetchStatus()
+        public List<Tuple<int, bool, string, int, string>> GetAllFetchStatus()
         {
-            return _allItems.Select(item => new Tuple<int, bool, string, int>(item.Index, item.IsFetched, item.Title, item.GetRoughContextLen())).ToList();
+            return allItems.Select(item => new Tuple<int, bool, string, int,string>(item.Index, item.IsFetched, item.Title, item.GetRoughContextLen(), item.Url)).ToList();
         }
 
         #endregion
