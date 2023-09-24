@@ -12,7 +12,8 @@ namespace ContentExtractorTests
         [DataRow("http://tw.zhsxs.com/zhsread/62696_23506224.html", "第八十九章 癡情人都不得好死！", "青冥大尊咬咬牙，心中喃喃道；「老友，對不住了！＂")]
         [DataRow("https://tw.hjwzw.com/Book/Read/1644,409280", "第一章 山邊小村", "走出了自己的修仙之路")]
         [DataRow("https://tw.uukanshu.com/b/86613/298521.html", "第1793章 重生唐3（下）", "后面還有后記，大家記得看。之后就要正式開啟咱們的《斗羅大陸V重生唐三》了！")]
-
+        //不確定為何一直逾時，頁面是可以開的
+        [DataRow("https://tw.hjwzw.com/Book/Read/37865,22703659","第430章 非南之行(109)", "葉凌月和辛霖陷入了沉默，這一點，她們也想到了")]
         //這個，需要調整找內文的算法，因為它找錯節點
         [DataRow("https://www.ptwxz.com/html/3/3259/4046016.html", "第四十五卷 第十七章 梅花香（大结局下）", "再次见面就是新书的世界了，6月15号再见喽")]
         //這個會把一章又切兩頁，目前沒有處理它的功能
