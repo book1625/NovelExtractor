@@ -56,6 +56,8 @@
             <TextBox Margin="5" Text="{Binding BookName, Mode=TwoWay}" />
             <TextBlock Margin="5" Text="作者名：" />
             <TextBox Margin="5" Text="{Binding Author, Mode=TwoWay}" />
+            <TextBlock Margin="5" Text="切檔回數：" />
+            <TextBox Margin="5" Text="{Binding ChunkSize, Mode=TwoWay}" />
             <Button Margin="5" Command="{Binding SaveCommand}">輸出檔案</Button>
         </StackPanel>
 

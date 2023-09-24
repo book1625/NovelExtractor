@@ -130,6 +130,22 @@ public class MainWindowViewModel : INotifyPropertyChanged
         }
     }
 
+    private string chunkSize = "0";
+
+    /// <summary>
+    /// 切檔回數
+    /// </summary>
+    public string ChunkSize
+    {
+        get => chunkSize;
+        set
+        {
+            if(chunkSize == value) return;
+            chunkSize = value;
+            OnPropertyChanged();
+        }
+    }
+
     private bool isReservedList;
 
     public bool IsReservedList
@@ -240,10 +256,16 @@ public class MainWindowViewModel : INotifyPropertyChanged
             return;
         }
 
+        if (!int.TryParse(ChunkSize, out var size))
+        {
+            DisplayMessage("請先確認切檔回數值是否正常");
+            return;
+        }
+
         var resultText = _currJob.SaveToTxtFile(AppDomain.CurrentDomain.BaseDirectory, BookName, Author) ? "成功" : "失敗";
         DisplayMessage($@"TXT 存檔結果 {resultText}");
 
-        resultText = _currJob.SaveToEpubFile(AppDomain.CurrentDomain.BaseDirectory, BookName, Author) ? "成功" : "失敗";
+        resultText = _currJob.SaveToEpubFile(AppDomain.CurrentDomain.BaseDirectory, BookName, Author, size) ? "成功" : "失敗";
         DisplayMessage($@"EPUB 存檔結果 {resultText}");
     }, () => true);
 
