@@ -83,7 +83,7 @@
                             <TextBlock Margin="10,0,0,0">
                                 <Hyperlink NavigateUri="{Binding Link}" RequestNavigate="Hyperlink_OnRequestNavigate">
                                     <Hyperlink.Inlines>
-                                        <Run Text="{Binding Title}" Foreground="GreenYellow"/>
+                                        <Run Foreground="GreenYellow" Text="{Binding Title}" />
                                     </Hyperlink.Inlines>
                                 </Hyperlink>
                             </TextBlock>
