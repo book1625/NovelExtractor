@@ -190,7 +190,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
 
         var tarList = download.Select(d => new Tuple<string, string>($"{url.Scheme}://{url.Host}{d.Item1}", d.Item2))
 #if DEBUG
-            .Take(5) //這是為了好測試
+            .Take(50) //這是為了好測試
 #endif
             .ToList();
 

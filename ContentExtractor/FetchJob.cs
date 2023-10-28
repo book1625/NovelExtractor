@@ -175,7 +175,7 @@ namespace ContentExtractor
             if (chunkSize <= 0) return SaveToEpubFile(path, bookName, authName, allItems);
 
             var chunkList = SplitList(allItems, chunkSize).Select((x, i) => new { Index = i + 1, Value = x });
-            return chunkList.All(chunk => SaveToEpubFile(path, bookName, authName, chunk.Value, chunk.Index));
+            return chunkList.All(chunk => SaveToEpubFile(path, bookName, authName, chunk.Value, chunk.Index, chunkList.Count().ToString().Length));
         }
 
         /// <summary>
@@ -185,21 +185,22 @@ namespace ContentExtractor
         /// <param name="bookName"></param>
         /// <param name="authName"></param>
         /// <param name="targets"></param>
-        /// <param name="chunkNum"></param>
+        /// <param name="chunkNum">指出這是第幾個分割</param>
+        /// <param name="chunkPadWidth">指出分割檔名的對齊寬度</param>
         /// <returns></returns>
-        private static bool SaveToEpubFile(string path, string bookName, string authName, List<PageFetchItem> targets, int chunkNum = 0)
+        private static bool SaveToEpubFile(string path, string bookName, string authName, List<PageFetchItem> targets, int chunkNum = 0, int chunkPadWidth = 1)
         {
             try
             {
-                var chunk = chunkNum <= 0 ? string.Empty : $"[{chunkNum}]";
-                var tarFile = new FileInfo($@"{path}\{authName}-{bookName}{chunk}.epub");
+                var chunkText = chunkNum <= 0 ? string.Empty : $"_{chunkNum.ToString().PadLeft(chunkPadWidth,'0')}";
+                var tarFile = new FileInfo($@"{path}\{authName}-{bookName}{chunkText}.epub");
 
                 if (tarFile.Exists)
                 {
                     tarFile.Delete();
                 }
 
-                var doc = new Epub(bookName, authName);
+                var doc = new Epub($"{bookName}{chunkText}", authName);
 
                 foreach (var pageFetchItem in targets)
                 {
