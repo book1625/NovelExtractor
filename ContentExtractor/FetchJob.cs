@@ -192,7 +192,7 @@ namespace ContentExtractor
         {
             try
             {
-                var chunkText = chunkNum <= 0 ? string.Empty : $"_{chunkNum.ToString().PadLeft(chunkPadWidth,'0')}";
+                var chunkText = chunkNum <= 0 ? string.Empty : $"_{chunkNum.ToString().PadLeft(chunkPadWidth, '0')}";
                 var tarFile = new FileInfo($@"{path}\{authName}-{bookName}{chunkText}.epub");
 
                 if (tarFile.Exists)
@@ -211,8 +211,10 @@ namespace ContentExtractor
                         continue;
                     }
 
-                    var epubContext = context.Select(s => $"<p>{s}</p>");
-                    doc.AddSection(pageFetchItem.Title, $"<h2>{pageFetchItem.Title}</h2> {string.Join(" ", epubContext)}");
+                    var epubContext = context.Select(s => $"<p>{System.Net.WebUtility.HtmlEncode(s ?? "")}</p>");
+                    var epubTitle = System.Net.WebUtility.HtmlEncode(pageFetchItem.Title ?? "");
+                    if (string.IsNullOrWhiteSpace(epubTitle)) epubTitle = "無標題";
+                    doc.AddSection(epubTitle, $"<h2>{epubTitle}</h2> {string.Join(" ", epubContext)}");
                 }
 
                 using (var fs = new FileStream(tarFile.FullName, FileMode.Create))
