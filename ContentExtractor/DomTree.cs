@@ -1,5 +1,4 @@
-﻿using System;
-using HtmlAgilityPack;
+﻿using HtmlAgilityPack;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -182,7 +181,6 @@ namespace ContentExtractor
             return maxNode?.Descendants()
                 .Where(n => n.NodeType == HtmlNodeType.Element && n.Name.ToLower() == "a")
                 .ToList();
-
         }
 
         private static int GetChildDepth(HtmlNode node, int maxDepth)
