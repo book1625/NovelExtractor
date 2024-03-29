@@ -153,7 +153,7 @@ namespace ContentExtractor
         /// <summary>
         /// 解析下載清單
         /// </summary>
-        public void ParseDownloadList(int limitChildDepth = 5)
+        public void ParseDownloadList(int limitChildDepth = 10)
         {
             var context = GetHtmlContent(
                 highPriorityEncode,
