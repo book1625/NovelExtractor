@@ -199,7 +199,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         _currJob.OnProcessCompleted += CurrJob_OnProcessCompleted;
 
         DownloadList.Clear();
-        _currJob.GetAllFetchStatus().Select(state => new DownloadItem()
+        _currJob.GetAllFetchStatus().Where(state => Uri.IsWellFormedUriString(state.Item5, UriKind.Absolute)).Select(state => new DownloadItem()
         {
             Index = state.Item1,
             IsFetched = state.Item2,
