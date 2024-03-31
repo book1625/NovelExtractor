@@ -9,7 +9,7 @@ using System.Runtime.CompilerServices;
 
 namespace Extractor;
 
-public class MainWindowViewModel : INotifyPropertyChanged
+public class MainWindowViewModel:INotifyPropertyChanged
 {
     /// <summary>
     /// ctor
@@ -140,7 +140,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
         get => chunkSize;
         set
         {
-            if(chunkSize == value) return;
+            if (chunkSize == value) return;
             chunkSize = value;
             OnPropertyChanged();
         }
@@ -155,6 +155,19 @@ public class MainWindowViewModel : INotifyPropertyChanged
         {
             if (isReservedList == value) return;
             isReservedList = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private int pageParseDepth = 5;
+
+    public int PageParseDepth
+    {
+        get => pageParseDepth;
+        set
+        {
+            if (pageParseDepth == value) return;
+            pageParseDepth = value;
             OnPropertyChanged();
         }
     }
@@ -185,7 +198,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
             Url = TargetUrl
         };
 
-        parse.ParseDownloadList();
+        parse.ParseDownloadList(pageParseDepth);
         var download = parse.GetDownloadList(isReservedList);
 
         var tarList = download.Select(d => new Tuple<string, string>($"{url.Scheme}://{url.Host}{d.Item1}", d.Item2))
@@ -322,7 +335,7 @@ public class MainWindowViewModel : INotifyPropertyChanged
 /// <summary>
 /// 顯示用下載物件
 /// </summary>
-public class DownloadItem : INotifyPropertyChanged
+public class DownloadItem:INotifyPropertyChanged
 {
     /// <summary>
     /// 識別索引碼

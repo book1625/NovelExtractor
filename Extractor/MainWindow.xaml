@@ -1,16 +1,17 @@
 ﻿<Window
-    x:Class="Extractor.MainWindow"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:Extractor"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     Title="Extractor"
     Width="1200"
     Height="600"
     d:DataContext="{d:DesignInstance Type=local:MainWindowViewModel,
                                      IsDesignTimeCreatable=False}"
+    x:Class="Extractor.MainWindow"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Extractor"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:toolkit="http://schemas.xceed.com/wpf/xaml/toolkit"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     FontSize="14"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     mc:Ignorable="d">
 
     <Window.Resources>
@@ -37,7 +38,11 @@
             Background="DarkSeaGreen">
             <TextBlock Margin="5" Text="目標網頁：" />
             <TextBox Margin="5" Text="{Binding TargetUrl, Mode=TwoWay}" />
-            <CheckBox IsChecked="{Binding IsReservedList, Mode=TwoWay}">是否反轉清單排序</CheckBox>
+            <StackPanel Orientation="Horizontal">
+                <CheckBox VerticalAlignment="Center" IsChecked="{Binding IsReservedList, Mode=TwoWay}">反轉排序</CheckBox>
+                <TextBlock Margin="5,0" VerticalAlignment="Center">解析深度</TextBlock>
+                <toolkit:IntegerUpDown VerticalAlignment="Center" Value="{Binding PageParseDepth, Mode=TwoWay}" />
+            </StackPanel>
             <Button Margin="5" Command="{Binding ParseCommand}">解析清單</Button>
             <StackPanel Margin="5" Orientation="Horizontal">
                 <TextBlock>
