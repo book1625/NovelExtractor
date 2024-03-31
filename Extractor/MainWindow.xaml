@@ -42,6 +42,12 @@
                 <CheckBox VerticalAlignment="Center" IsChecked="{Binding IsReservedList, Mode=TwoWay}">反轉排序</CheckBox>
                 <TextBlock Margin="5,0" VerticalAlignment="Center">解析深度</TextBlock>
                 <toolkit:IntegerUpDown VerticalAlignment="Center" Value="{Binding PageParseDepth, Mode=TwoWay}" />
+                <TextBlock Margin="5,0" VerticalAlignment="Center">網址模式</TextBlock>
+                <ComboBox
+                    Margin="5,0"
+                    VerticalAlignment="Center"
+                    ItemsSource="{Binding UrlModes}"
+                    SelectedItem="{Binding SelectedUrlMode, Mode=TwoWay}" />
             </StackPanel>
             <Button Margin="5" Command="{Binding ParseCommand}">解析清單</Button>
             <StackPanel Margin="5" Orientation="Horizontal">

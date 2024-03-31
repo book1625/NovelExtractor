@@ -12,6 +12,15 @@ namespace Extractor;
 public class MainWindowViewModel:INotifyPropertyChanged
 {
     /// <summary>
+    /// 下載網址的取得模式
+    /// </summary>
+    public enum UrlMode
+    {
+        HostBase,
+        PageBase
+    }
+
+    /// <summary>
     /// ctor
     /// </summary>
     /// <param name="display"></param>
@@ -148,6 +157,9 @@ public class MainWindowViewModel:INotifyPropertyChanged
 
     private bool isReservedList;
 
+    /// <summary>
+    /// 是否反轉清單
+    /// </summary>
     public bool IsReservedList
     {
         get => isReservedList;
@@ -161,6 +173,9 @@ public class MainWindowViewModel:INotifyPropertyChanged
 
     private int pageParseDepth = 5;
 
+    /// <summary>
+    /// 解析深度
+    /// </summary>
     public int PageParseDepth
     {
         get => pageParseDepth;
@@ -168,6 +183,38 @@ public class MainWindowViewModel:INotifyPropertyChanged
         {
             if (pageParseDepth == value) return;
             pageParseDepth = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private ObservableCollection<UrlMode> urlModes = new() { UrlMode.HostBase, UrlMode.PageBase };
+
+    /// <summary>
+    /// 下載網址的組合模式
+    /// </summary>
+    public ObservableCollection<UrlMode> UrlModes
+    {
+        get => urlModes;
+        set
+        {
+            if (urlModes == value) return;
+            urlModes = value;
+            OnPropertyChanged();
+        }
+    }
+
+    private UrlMode selectedUrlMode = UrlMode.HostBase;
+
+    /// <summary>
+    /// 選定的網址的組合模式
+    /// </summary>
+    public UrlMode SelectedUrlMode
+    {
+        get => selectedUrlMode;
+        set
+        {
+            if (selectedUrlMode == value) return;
+            selectedUrlMode = value;
             OnPropertyChanged();
         }
     }
@@ -201,11 +248,23 @@ public class MainWindowViewModel:INotifyPropertyChanged
         parse.ParseDownloadList(pageParseDepth);
         var download = parse.GetDownloadList(isReservedList);
 
-        var tarList = download.Select(d => new Tuple<string, string>($"{url.Scheme}://{url.Host}{d.Item1}", d.Item2))
-#if DEBUG
-            .Take(50) //這是為了好測試
-#endif
-            .ToList();
+        //這裡目前有兩種不同的組下載連結手法
+        //最常前的是網站的 host，再加上一段相對路徑
+        //另一種是代換最後一個 segment
+
+        List<Tuple<string, string>> tarList;
+
+        switch (selectedUrlMode)
+        {
+            case UrlMode.HostBase:
+                tarList = download.Select(d => new Tuple<string, string>($"{url.Scheme}://{url.Host}{d.Item1}", d.Item2)).ToList();
+                break;
+            case UrlMode.PageBase:
+                tarList = download.Select(d => new Tuple<string, string>(url.AbsoluteUri.Replace(url.Segments[^1], d.Item1), d.Item2)).ToList();
+                break;
+            default:
+                throw new ArgumentOutOfRangeException();
+        }
 
         _currJob = new FetchJob(tarList);
         _currJob.OnProcessStatus += CurrJob_OnProcessStatus;
