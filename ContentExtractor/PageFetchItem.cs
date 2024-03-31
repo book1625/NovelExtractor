@@ -37,13 +37,17 @@ namespace ContentExtractor
         /// </summary>
         public PageFetchItem()
         {
+            //https://stackoverflow.com/questions/50858209/system-notsupportedexception-no-data-is-available-for-encoding-1252
+            //由於新的 .net 需要另行裝套件才能支援其它語言編碼，所以專案裝上套件，並且自已把這個實體註冊給 .net
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
             //以下初始化優先處理的編碼
 
             //big5
-            //highPriorityEncode.Add(950, Encoding.GetEncoding(950));
-
+            highPriorityEncode.Add(950, Encoding.GetEncoding(950));
+            
             //GB18030 簡體中文
-            //highPriorityEncode.Add(54936, Encoding.GetEncoding(54936));
+            highPriorityEncode.Add(54936, Encoding.GetEncoding(54936));
 
             //UTF 8
             highPriorityEncode.Add(65001, Encoding.GetEncoding(65001));
