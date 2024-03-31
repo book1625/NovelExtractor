@@ -87,10 +87,12 @@
                                 Text="{Binding RoundCount}"
                                 TextAlignment="Right" />
 
+                            <TextBlock Margin="10,0,0,0" Text="{Binding Title}" />
+
                             <TextBlock Margin="10,0,0,0">
                                 <Hyperlink NavigateUri="{Binding Link}" RequestNavigate="Hyperlink_OnRequestNavigate">
                                     <Hyperlink.Inlines>
-                                        <Run Foreground="GreenYellow" Text="{Binding Title}" />
+                                        <Run Foreground="GreenYellow" Text="{Binding Link}" />
                                     </Hyperlink.Inlines>
                                 </Hyperlink>
                             </TextBlock>
