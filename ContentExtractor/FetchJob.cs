@@ -122,7 +122,7 @@ namespace ContentExtractor
                 {
                     foreach (var fetchItem in allItems)
                     {
-                        sw.WriteLine(fetchItem.Title);
+                        sw.WriteLine(ModifyTitle(fetchItem.Title, fetchItem.Index));
                         sw.WriteLine();
 
                         foreach (var contextItem in fetchItem.GetContext())
@@ -214,6 +214,7 @@ namespace ContentExtractor
                     var epubContext = context.Select(s => $"<p>{System.Net.WebUtility.HtmlEncode(s ?? "")}</p>");
                     var epubTitle = System.Net.WebUtility.HtmlEncode(pageFetchItem.Title ?? "");
                     if (string.IsNullOrWhiteSpace(epubTitle)) epubTitle = "無標題";
+                    epubTitle = ModifyTitle(epubTitle, pageFetchItem.Index);
                     doc.AddSection(epubTitle, $"<h2>{epubTitle}</h2> {string.Join(" ", epubContext)}");
                 }
 
@@ -239,6 +240,26 @@ namespace ContentExtractor
         public List<Tuple<int, bool, string, int, string>> GetAllFetchStatus()
         {
             return allItems.Select(item => new Tuple<int, bool, string, int, string>(item.Index, item.IsFetched, item.Title, item.GetRoughContextLen(), item.Url)).ToList();
+        }
+
+        /// <summary>
+        /// 客制化輸出標題，主要是為了解決部份小說章節名稱在不同小說軟體時，不具全域惟一性，不好快速找到的問題
+        /// </summary>
+        /// <param name="title"></param>
+        /// <param name="index"></param>
+        /// <returns></returns>
+        private static string ModifyTitle(string title, int index)
+        {
+            var prefixTitle = $"第{index:0000}回";
+            if (string.IsNullOrWhiteSpace(title)) return prefixTitle;
+            if (title.Contains(" "))
+            {
+                var src = title.Split(new[]{' '}, StringSplitOptions.RemoveEmptyEntries);
+                var rest = src.Skip(1).Take(src.Length - 1);
+                return $"{prefixTitle} {string.Join("", rest)}";
+            }
+
+            return $"{prefixTitle} {title}";
         }
 
         #endregion
