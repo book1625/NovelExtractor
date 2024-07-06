@@ -127,6 +127,7 @@ namespace ContentExtractor
             //過濾 HTML 專屬字元
             var text = targetTextNode.InnerText
                 .Replace("&nbsp;&nbsp;", "\n")
+                .Replace("&nbsp&nbsp", "")
                 .Replace("&quot;", @"""")
                 .Replace("&gt;", ">")
                 .Replace("@lt;", "<");
