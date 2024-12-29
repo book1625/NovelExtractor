@@ -16,6 +16,7 @@ public class MainWindowViewModel:INotifyPropertyChanged
     /// </summary>
     public enum UrlMode
     {
+        Direct,
         HostBase,
         PageBase
     }
@@ -187,7 +188,7 @@ public class MainWindowViewModel:INotifyPropertyChanged
         }
     }
 
-    private ObservableCollection<UrlMode> urlModes = new() { UrlMode.HostBase, UrlMode.PageBase };
+    private ObservableCollection<UrlMode> urlModes = new() { UrlMode.Direct, UrlMode.HostBase, UrlMode.PageBase };
 
     /// <summary>
     /// 下載網址的組合模式
@@ -248,14 +249,18 @@ public class MainWindowViewModel:INotifyPropertyChanged
         parse.ParseDownloadList(pageParseDepth);
         var download = parse.GetDownloadList(isReservedList);
 
-        //這裡目前有兩種不同的組下載連結手法
+        //這裡目前有三種不同的組下載連結手法
         //最常前的是網站的 host，再加上一段相對路徑
         //另一種是代換最後一個 segment
+        //還有一種最直白，就是直接給完整連結
 
         List<Tuple<string, string>> tarList;
 
         switch (selectedUrlMode)
         {
+            case UrlMode.Direct:
+                tarList = download.Select(d => new Tuple<string, string>(d.Item1, d.Item2)).ToList();
+                break;
             case UrlMode.HostBase:
                 tarList = download.Select(d => new Tuple<string, string>($"{url.Scheme}://{url.Host}{d.Item1}", d.Item2)).ToList();
                 break;
