@@ -17,11 +17,6 @@ namespace ContentExtractor
         private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
 
         /// <summary>
-        /// 呼叫網頁連結間的間隔，避免被對方服務器視為攻擊
-        /// </summary>
-        private const int DefaultFetchPeriodMs = 100;
-
-        /// <summary>
         /// 記錄所有被要求的工作連結
         /// </summary>
         private readonly List<PageFetchItem> allItems;
@@ -64,21 +59,20 @@ namespace ContentExtractor
                 {
                     try
                     {
-                        var counter = 1;
+                        var counter = 0;
                         foreach (var fetchItem in allItems)
                         {
                             if (cts.IsCancellationRequested) return;
 
-                            if (!fetchItem.IsFetched)
-                            {
-                                fetchItem.ParseTextContext();
+                            //沒資料就試著拿取
+                            if (!fetchItem.IsFetched) fetchItem.ParseTextContext();
 
-                                //如果有發生取得異常，就意思一下先 hold 住不要一直捉
-                                Thread.Sleep(!fetchItem.IsFetched ? 10000 : DefaultFetchPeriodMs);
-                            }
-
-                            FireOnProcessStatus((double)counter / allItems.Count, fetchItem);
+                            //不論成敗，發動事件回報
                             counter++;
+                            FireOnProcessStatus((double)counter / allItems.Count, fetchItem);
+                            
+                            //每拿百個就停一下手，免得被盯
+                            if (counter % 100 == 0) Thread.Sleep(10000);
                         }
                     }
                     catch (Exception e)
