@@ -47,11 +47,12 @@ namespace ContentExtractor
         /// <summary>
         /// 開始進行截取工作
         /// </summary>
-        public void ProcessAsync()
+        public void ProcessAsync(bool isRandomDelay)
         {
             CancelProcessAsync();
 
             cts = new CancellationTokenSource();
+            var rand = new Random(Environment.TickCount);
 
             Task.Run(() =>
             {
@@ -59,20 +60,31 @@ namespace ContentExtractor
                 {
                     try
                     {
+                        var lastSleep = DateTime.Now;
                         var counter = 0;
                         foreach (var fetchItem in allItems)
                         {
                             if (cts.IsCancellationRequested) return;
 
                             //沒資料就試著拿取
-                            if (!fetchItem.IsFetched) fetchItem.ParseTextContext();
+                            if (!fetchItem.IsFetched)
+                            {
+                                fetchItem.ParseTextContext();
+
+                                //如果有拿到資料而且有要求隨機延遲，就隨機延遲一下
+                                if (isRandomDelay && fetchItem.IsFetched) Thread.Sleep(rand.Next(1, 5) * 1000);
+                            }
 
                             //不論成敗，發動事件回報
                             counter++;
                             FireOnProcessStatus((double)counter / allItems.Count, fetchItem);
-                            
+
                             //每拿百個就停一下手，免得被盯
-                            if (counter % 100 == 0) Thread.Sleep(10000);
+                            if (counter % 100 == 0 && DateTime.Now.Subtract(lastSleep).TotalSeconds > 5)
+                            {
+                                Thread.Sleep(10000);
+                                lastSleep = DateTime.Now;
+                            }
                         }
                     }
                     catch (Exception e)
@@ -148,7 +160,7 @@ namespace ContentExtractor
         {
             var list = new List<List<PageFetchItem>>();
 
-            for (var i = 0;i < locations.Count;i += nSize)
+            for (var i = 0; i < locations.Count; i += nSize)
             {
                 list.Add(locations.GetRange(i, Math.Min(nSize, locations.Count - i)));
             }
@@ -248,7 +260,7 @@ namespace ContentExtractor
             if (string.IsNullOrWhiteSpace(title)) return prefixTitle;
             if (title.Contains(" "))
             {
-                var src = title.Split(new[]{' '}, StringSplitOptions.RemoveEmptyEntries);
+                var src = title.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
                 var rest = src.Skip(1).Take(src.Length - 1);
                 return $"{prefixTitle} {string.Join("", rest)}";
             }

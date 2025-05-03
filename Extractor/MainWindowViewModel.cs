@@ -220,6 +220,22 @@ public class MainWindowViewModel:INotifyPropertyChanged
         }
     }
 
+    private bool isRandomDelay = false;
+
+    /// <summary>
+    /// 下載時是否隨機延遲
+    /// </summary>
+    public bool IsRandomDelay
+    {
+        get => isRandomDelay;
+        set
+        {
+            if (isRandomDelay == value) return;
+            isRandomDelay = value;
+            OnPropertyChanged();
+        }
+    }
+
     #endregion
 
     #region Public command
@@ -300,7 +316,7 @@ public class MainWindowViewModel:INotifyPropertyChanged
             DisplayMessage("沒有可運行的下載清單");
         }
         DisplayMessage("運行所有下載工作");
-        _currJob?.ProcessAsync();
+        _currJob?.ProcessAsync(IsRandomDelay);
     }, () => true);
 
     /// <summary>
