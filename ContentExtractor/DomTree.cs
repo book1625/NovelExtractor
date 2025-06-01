@@ -203,44 +203,47 @@ namespace ContentExtractor
         /// <summary>
         /// 初始物件資料 
         /// </summary>
-        /// <param name="inputHtmlData"></param>
-        public void InitMaxOuterHtmlAndMaxInnerTextNodeV2()
+        public void InitMaxOuterHtmlAndMaxInnerTextNodeV2(string tarId=null)
         {
-            HasSplitCharsNodeList = new List<SplitCharsNode>();
             MaxOuterHtmlNode = null;
             MaxInnerTextNode = null;
 
-            //儲存所有的節點
-            var tempAllTagNodeList = HtmlDoc.DocumentNode.DescendantsAndSelf().ToList();
-
-            //取得有分割字元結點的List
-            GetSplitCharsNodeList(tempAllTagNodeList);
-
-            if (HasSplitCharsNodeList.Count > 0)
+            if (string.IsNullOrEmpty(tarId))
             {
-                getMainTextNodeByRealSplitCount();
-            }
-            else
-            {
-                //看有沒有被濾掉的FormNode
-                if (_formNodeList != null && _formNodeList.Count > 0)
+                HasSplitCharsNodeList = new List<SplitCharsNode>();
+
+                //取得有分割字元結點的List
+                GetSplitCharsNodeList(HtmlDoc.DocumentNode.DescendantsAndSelf().ToList());
+
+                if (HasSplitCharsNodeList.Count > 0)
                 {
-                    var mainFormNode = (from n in _formNodeList
-                                        orderby n.XPath.Length ascending
-                                        select n).ToList().FirstOrDefault();
-
-                    var formTagNodeList = mainFormNode.DescendantsAndSelf().ToList();
-                    GetSplitCharsNodeList(formTagNodeList);
-
-                    if (HasSplitCharsNodeList.Count > 0)
+                    getMainTextNodeByRealSplitCount();
+                }
+                else
+                {
+                    //看有沒有被濾掉的FormNode
+                    if (_formNodeList != null && _formNodeList.Count > 0)
                     {
-                        getMainTextNodeByRealSplitCount();
+                        var mainFormNode = (from n in _formNodeList
+                            orderby n.XPath.Length ascending
+                            select n).ToList().FirstOrDefault();
+
+                        var formTagNodeList = mainFormNode.DescendantsAndSelf().ToList();
+                        GetSplitCharsNodeList(formTagNodeList);
+
+                        if (HasSplitCharsNodeList.Count > 0)
+                        {
+                            getMainTextNodeByRealSplitCount();
+                        }
                     }
                 }
             }
-
+            else
+            {
+                //有指定名字，直接靠名字找到節點
+                MaxInnerTextNode = HtmlDoc.DocumentNode.DescendantsAndSelf().ToList().FirstOrDefault(n => n.Id == tarId);
+            }
         }
-
 
         #endregion
 
@@ -373,7 +376,7 @@ namespace ContentExtractor
 
             MaxInnerTextNode = (
                 from n in HasSplitCharsNodeList
-                orderby n.SplitCount descending, n.Node.InnerText.Length descending
+                orderby n.Node.InnerText.Length descending
                 select n.Node).FirstOrDefault();
         }
 

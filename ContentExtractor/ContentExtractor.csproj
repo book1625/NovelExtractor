@@ -6,10 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="HtmlAgilityPack" Version="1.11.46" />
-    <PackageReference Include="NLog" Version="5.1.4" />
-    <PackageReference Include="QuickEPUB" Version="1.1.0" />
-    <PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.0-preview.2.24128.5" />
+    <PackageReference Include="HtmlAgilityPack" Version="1.12.1" />
+    <PackageReference Include="NLog" Version="5.5.0" />
+    <PackageReference Include="QuickEPUB" Version="1.2.0" />
+    <PackageReference Include="System.Text.Encoding.CodePages" Version="9.0.5" />
     <PackageReference Include="Ude.NetStandard" Version="1.2.0" />
   </ItemGroup>
 

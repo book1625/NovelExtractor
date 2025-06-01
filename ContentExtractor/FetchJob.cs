@@ -22,6 +22,11 @@ namespace ContentExtractor
         private readonly List<PageFetchItem> allItems;
 
         /// <summary>
+        /// 記錄指定元素 ID，這個元素會被用來抓取內容
+        /// </summary>
+        private readonly string targetElementId;
+
+        /// <summary>
         /// 公開方法共用的同步鎖
         /// </summary>
         private readonly object operationLock = new object();
@@ -30,8 +35,9 @@ namespace ContentExtractor
         /// ctor
         /// </summary>
         /// <param name="fetchList"></param>
-        public FetchJob(List<Tuple<string, string>> fetchList)
+        public FetchJob(List<Tuple<string, string>> fetchList, string tarElementId)
         {
+            targetElementId = tarElementId;
             allItems = fetchList.Select((f, i) => new PageFetchItem()
             {
                 Index = i + 1,
@@ -69,7 +75,7 @@ namespace ContentExtractor
                             //沒資料就試著拿取
                             if (!fetchItem.IsFetched)
                             {
-                                fetchItem.ParseTextContext();
+                                fetchItem.ParseTextContext(targetElementId);
 
                                 //如果有拿到資料而且有要求隨機延遲，就隨機延遲一下
                                 if (isRandomDelay && fetchItem.IsFetched) Thread.Sleep(rand.Next(1, 5) * 1000);

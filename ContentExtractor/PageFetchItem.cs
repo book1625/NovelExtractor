@@ -45,7 +45,7 @@ namespace ContentExtractor
 
             //big5
             highPriorityEncode.Add(950, Encoding.GetEncoding(950));
-            
+
             //GB18030 簡體中文
             highPriorityEncode.Add(54936, Encoding.GetEncoding(54936));
 
@@ -54,7 +54,7 @@ namespace ContentExtractor
         }
 
         #region Public Properties
-        
+
         /// <summary>
         /// 工作索引號
         /// </summary>
@@ -90,11 +90,11 @@ namespace ContentExtractor
         #endregion
 
         #region Public Methods
-        
+
         /// <summary>
         /// 解析最大內文
         /// </summary>
-        public void ParseTextContext()
+        public void ParseTextContext(string tarId = null)
         {
             var context = GetHtmlContent(
                 highPriorityEncode,
@@ -108,7 +108,7 @@ namespace ContentExtractor
 
             //抽出最大內文節點
             var dTree = new DomTree(context);
-            dTree.InitMaxOuterHtmlAndMaxInnerTextNodeV2();
+            dTree.InitMaxOuterHtmlAndMaxInnerTextNodeV2(tarId);
             targetTextNode = dTree.MaxInnerTextNode;
         }
 
@@ -118,8 +118,7 @@ namespace ContentExtractor
         /// <returns></returns>
         public string[] GetContext()
         {
-            if (targetTextNode == null
-                || string.IsNullOrEmpty(targetTextNode.InnerText))
+            if (targetTextNode == null || string.IsNullOrEmpty(targetTextNode.InnerText))
             {
                 return Array.Empty<string>();
             }
@@ -141,13 +140,72 @@ namespace ContentExtractor
             text = regx.Replace(text, "#");
 
             //打掉空行和重覆標題
-            var keyTitle = Title.Split(' ').First();
-            var result = text.Split('\n', '\r')
+            //var keyTitle = Title.Split(' ').First();
+            //var result = text.Split('\n', '\r')
+            //    .Select(s => s.Trim())
+            //    .Where(s => !string.IsNullOrEmpty(s) && !s.Contains(keyTitle))
+            //    .ToArray();
+
+            var result = text.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(s => s.Trim())
-                .Where(s => !string.IsNullOrEmpty(s) && !s.Contains(keyTitle))
                 .ToArray();
 
-            return result;
+            //如果只有5行以下，則可能網站的排版不是靠換行符號來分段，這時就得考慮自行分段的方式
+            if (result.Length < 5)
+            {
+                result = SplitAndKeepDelimiters(text, new[] { '？', '。', '?', '.', '「', '」' })
+                    .Select(s => s.Trim())
+                    .ToArray();
+            }
+
+            //可能打完後沒半行，只好全拿
+            return result.Length == 0 ? new[] { text } : result;
+        }
+
+        /// <summary>
+        /// 將字串依照指定符號切割（切割點在符號之後），並保留切割符號，且每段至少20個字
+        /// </summary>
+        /// <param name="input">原始字串</param>
+        /// <param name="delimiters">要切割並保留的符號集合</param>
+        /// <returns>切割後的字串陣列，包含符號，且每段至少20字</returns>
+        public static string[] SplitAndKeepDelimiters(string input, char[] delimiters)
+        {
+            if (string.IsNullOrEmpty(input) || delimiters == null || delimiters.Length == 0)
+                return new[] { input };
+
+            // 建立正則模式，符號在句尾
+            var pattern = $@"[^{Regex.Escape(new string(delimiters))}]+[{Regex.Escape(new string(delimiters))}]|[^{Regex.Escape(new string(delimiters))}]+$";
+            var matches = Regex.Matches(input, pattern);
+
+            var parts = matches.Cast<Match>().Select(m => m.Value).ToList();
+
+            var result = new List<string>();
+            var buffer = new StringBuilder();
+
+            foreach (var part in parts)
+            {
+                buffer.Append(part);
+                if (buffer.Length >= 20)
+                {
+                    result.Add(buffer.ToString());
+                    buffer.Clear();
+                }
+            }
+
+            // 若最後還有殘留不足20字的片段，則合併到上一段或單獨加入
+            if (buffer.Length > 0)
+            {
+                if (result.Count > 0)
+                {
+                    result[result.Count - 1] += buffer.ToString();
+                }
+                else
+                {
+                    result.Add(buffer.ToString());
+                }
+            }
+
+            return result.ToArray();
         }
 
         public int GetRoughContextLen()

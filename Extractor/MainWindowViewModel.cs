@@ -236,6 +236,23 @@ public class MainWindowViewModel:INotifyPropertyChanged
         }
     }
 
+    private string elementId;
+
+    /// <summary>
+    /// 指定元素的 ID
+    /// </summary>
+    public string ElementId
+    {
+        get => elementId;
+        set
+        {
+            if (elementId == value) return;
+            elementId = value;
+            OnPropertyChanged();
+        }
+    }
+
+
     #endregion
 
     #region Public command
@@ -287,7 +304,7 @@ public class MainWindowViewModel:INotifyPropertyChanged
                 throw new ArgumentOutOfRangeException();
         }
 
-        _currJob = new FetchJob(tarList);
+        _currJob = new FetchJob(tarList, elementId);
         _currJob.OnProcessStatus += CurrJob_OnProcessStatus;
         _currJob.OnProcessCompleted += CurrJob_OnProcessCompleted;
 

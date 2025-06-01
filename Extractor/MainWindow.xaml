@@ -1,7 +1,7 @@
 ﻿<Window
     Title="Extractor"
     Width="1200"
-    Height="600"
+    Height="700"
     d:DataContext="{d:DesignInstance Type=local:MainWindowViewModel,
                                      IsDesignTimeCreatable=False}"
     x:Class="Extractor.MainWindow"
@@ -38,7 +38,7 @@
             Background="DarkSeaGreen">
             <TextBlock Margin="5" Text="目標網頁：" />
             <TextBox Margin="5" Text="{Binding TargetUrl, Mode=TwoWay}" />
-            <StackPanel Orientation="Horizontal">
+            <WrapPanel Orientation="Horizontal">
                 <CheckBox Margin="5,0" VerticalAlignment="Center" IsChecked="{Binding IsReservedList, Mode=TwoWay}">反轉排序</CheckBox>
                 <CheckBox Margin="5,0" VerticalAlignment="Center" IsChecked="{Binding IsRandomDelay, Mode=TwoWay}">隨機延遲</CheckBox>
                 <TextBlock Margin="5,0" VerticalAlignment="Center">解析深度</TextBlock>
@@ -49,7 +49,9 @@
                     VerticalAlignment="Center"
                     ItemsSource="{Binding UrlModes}"
                     SelectedItem="{Binding SelectedUrlMode, Mode=TwoWay}" />
-            </StackPanel>
+                <TextBlock>指定元素 id</TextBlock>
+                <TextBox Text="{Binding ElementId, Mode=TwoWay}" MinWidth="50" Margin="5,0,0,0"/>
+            </WrapPanel>
             <Button Margin="5" Command="{Binding ParseCommand}">解析清單</Button>
             <StackPanel Margin="5" Orientation="Horizontal">
                 <TextBlock>
