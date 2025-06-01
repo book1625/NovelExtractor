@@ -23,9 +23,19 @@ namespace ContentExtractor
         private HtmlNode targetTextNode;
 
         /// <summary>
+        /// 最長行，推測是最大本文
+        /// </summary>
+        private string targetLongLine;
+
+        /// <summary>
         /// 解析出來的所有下載節點
         /// </summary>
         private List<HtmlNode> downloadLinkNodes;
+
+        /// <summary>
+        /// 是否直接長行解析
+        /// </summary>
+        private bool isLongLineDirect;
 
         /// <summary>
         /// 優先編碼字典
@@ -35,8 +45,10 @@ namespace ContentExtractor
         /// <summary>
         /// ctor
         /// </summary>
-        public PageFetchItem()
+        public PageFetchItem(bool isLongLineDirect)
         {
+            this.isLongLineDirect = isLongLineDirect;
+
             //https://stackoverflow.com/questions/50858209/system-notsupportedexception-no-data-is-available-for-encoding-1252
             //由於新的 .net 需要另行裝套件才能支援其它語言編碼，所以專案裝上套件，並且自已把這個實體註冊給 .net
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
@@ -85,7 +97,7 @@ namespace ContentExtractor
         /// <summary>
         /// 是否成功取得
         /// </summary>
-        public bool IsFetched => targetTextNode != null || downloadLinkNodes?.Count > 0;
+        public bool IsFetched => (targetTextNode != null || !string.IsNullOrWhiteSpace(targetLongLine)) || downloadLinkNodes?.Count > 0;
 
         #endregion
 
@@ -106,10 +118,18 @@ namespace ContentExtractor
 
             Logger.Debug($"{nameof(GetHtmlContent)} => {errorCode}, {errorMessage}, {redirectUrl}");
 
-            //抽出最大內文節點
-            var dTree = new DomTree(context);
-            dTree.InitMaxOuterHtmlAndMaxInnerTextNodeV2(tarId);
-            targetTextNode = dTree.MaxInnerTextNode;
+            if (isLongLineDirect)
+            {
+                var lines = context.Split('\r', '\n');
+                targetLongLine = lines.OrderByDescending(l => l.Length).FirstOrDefault();
+            }
+            else
+            {
+                //抽出最大內文節點
+                var dTree = new DomTree(context);
+                dTree.InitMaxOuterHtmlAndMaxInnerTextNodeV2(tarId);
+                targetTextNode = dTree.MaxInnerTextNode;
+            }
         }
 
         /// <summary>
@@ -118,18 +138,24 @@ namespace ContentExtractor
         /// <returns></returns>
         public string[] GetContext()
         {
-            if (targetTextNode == null || string.IsNullOrEmpty(targetTextNode.InnerText))
+            //依模式取得最大內文節點
+            var targetText = isLongLineDirect ? targetLongLine : targetTextNode.InnerText;
+
+            if (string.IsNullOrWhiteSpace(targetText))
             {
                 return Array.Empty<string>();
             }
 
             //過濾 HTML 專屬字元
-            var text = targetTextNode.InnerText
+            var text = targetText
                 .Replace("&nbsp;&nbsp;", "\n")
                 .Replace("&nbsp&nbsp", "")
                 .Replace("&quot;", @"""")
                 .Replace("&gt;", ">")
                 .Replace("@lt;", "<");
+
+            //特例??
+            text = text.Replace("<br />", "");
 
             //過濾 不處理的 HTML 專屬字元
             var regx = new Regex("&[a-z]+;");
@@ -210,7 +236,7 @@ namespace ContentExtractor
 
         public int GetRoughContextLen()
         {
-            return targetTextNode?.InnerLength ?? 0;
+            return targetTextNode?.InnerLength ?? targetLongLine?.Length ?? 0;
         }
 
         /// <summary>

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -18,7 +19,8 @@ public class MainWindowViewModel:INotifyPropertyChanged
     {
         Direct,
         HostBase,
-        PageBase
+        PageBase1,
+        PageBase2
     }
 
     /// <summary>
@@ -172,6 +174,22 @@ public class MainWindowViewModel:INotifyPropertyChanged
         }
     }
 
+    private bool isLongLineDirect;
+
+    /// <summary>
+    /// 是否使用長行解析法
+    /// </summary>
+    public bool IsLongLineDirect
+    {
+        get => isLongLineDirect;
+        set
+        {
+            if (isLongLineDirect == value) return;
+            isLongLineDirect = value;
+            OnPropertyChanged();
+        }
+    }
+
     private int pageParseDepth = 5;
 
     /// <summary>
@@ -188,7 +206,7 @@ public class MainWindowViewModel:INotifyPropertyChanged
         }
     }
 
-    private ObservableCollection<UrlMode> urlModes = new() { UrlMode.Direct, UrlMode.HostBase, UrlMode.PageBase };
+    private ObservableCollection<UrlMode> urlModes = new() { UrlMode.Direct, UrlMode.HostBase, UrlMode.PageBase1, UrlMode.PageBase2 };
 
     /// <summary>
     /// 下載網址的組合模式
@@ -274,7 +292,7 @@ public class MainWindowViewModel:INotifyPropertyChanged
             return;
         }
 
-        var parse = new PageFetchItem()
+        var parse = new PageFetchItem(false)
         {
             Url = TargetUrl
         };
@@ -297,14 +315,17 @@ public class MainWindowViewModel:INotifyPropertyChanged
             case UrlMode.HostBase:
                 tarList = download.Select(d => new Tuple<string, string>($"{url.Scheme}://{url.Host}{d.Item1}", d.Item2)).ToList();
                 break;
-            case UrlMode.PageBase:
+            case UrlMode.PageBase1:
                 tarList = download.Select(d => new Tuple<string, string>(url.AbsoluteUri.Replace(url.Segments[^1], d.Item1), d.Item2)).ToList();
+                break;
+            case UrlMode.PageBase2:
+                tarList = download.Select(d => new Tuple<string, string>(Path.Combine(url.AbsoluteUri, d.Item1), d.Item2)).ToList();
                 break;
             default:
                 throw new ArgumentOutOfRangeException();
         }
 
-        _currJob = new FetchJob(tarList, elementId);
+        _currJob = new FetchJob(tarList, elementId, isLongLineDirect);
         _currJob.OnProcessStatus += CurrJob_OnProcessStatus;
         _currJob.OnProcessCompleted += CurrJob_OnProcessCompleted;
 

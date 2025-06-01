@@ -27,6 +27,11 @@ namespace ContentExtractor
         private readonly string targetElementId;
 
         /// <summary>
+        /// 是否直接長行解析
+        /// </summary>
+        private readonly bool isLongLineDirect;
+
+        /// <summary>
         /// 公開方法共用的同步鎖
         /// </summary>
         private readonly object operationLock = new object();
@@ -34,11 +39,11 @@ namespace ContentExtractor
         /// <summary>
         /// ctor
         /// </summary>
-        /// <param name="fetchList"></param>
-        public FetchJob(List<Tuple<string, string>> fetchList, string tarElementId)
+        public FetchJob(List<Tuple<string, string>> fetchList, string tarElementId, bool isLongLineDirect)
         {
             targetElementId = tarElementId;
-            allItems = fetchList.Select((f, i) => new PageFetchItem()
+            this.isLongLineDirect = isLongLineDirect;
+            allItems = fetchList.Select((f, i) => new PageFetchItem(isLongLineDirect)
             {
                 Index = i + 1,
                 Url = f.Item1,

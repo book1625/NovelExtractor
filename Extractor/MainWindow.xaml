@@ -1,6 +1,6 @@
 ﻿<Window
     Title="Extractor"
-    Width="1200"
+    Width="1300"
     Height="700"
     d:DataContext="{d:DesignInstance Type=local:MainWindowViewModel,
                                      IsDesignTimeCreatable=False}"
@@ -51,6 +51,7 @@
                     SelectedItem="{Binding SelectedUrlMode, Mode=TwoWay}" />
                 <TextBlock>指定元素 id</TextBlock>
                 <TextBox Text="{Binding ElementId, Mode=TwoWay}" MinWidth="50" Margin="5,0,0,0"/>
+                <CheckBox Margin="5,0" VerticalAlignment="Center" IsChecked="{Binding IsLongLineDirect, Mode=TwoWay}">直接長行解文</CheckBox>
             </WrapPanel>
             <Button Margin="5" Command="{Binding ParseCommand}">解析清單</Button>
             <StackPanel Margin="5" Orientation="Horizontal">
