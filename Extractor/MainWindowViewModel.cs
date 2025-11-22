@@ -254,23 +254,6 @@ public class MainWindowViewModel:INotifyPropertyChanged
         }
     }
 
-    private string elementId;
-
-    /// <summary>
-    /// 指定元素的 ID
-    /// </summary>
-    public string ElementId
-    {
-        get => elementId;
-        set
-        {
-            if (elementId == value) return;
-            elementId = value;
-            OnPropertyChanged();
-        }
-    }
-
-
     #endregion
 
     #region Public command
@@ -296,8 +279,9 @@ public class MainWindowViewModel:INotifyPropertyChanged
         {
             Url = TargetUrl
         };
-
+                
         parse.ParseDownloadList(pageParseDepth);
+
         var download = parse.GetDownloadList(isReservedList);
 
         //這裡目前有三種不同的組下載連結手法
@@ -325,7 +309,7 @@ public class MainWindowViewModel:INotifyPropertyChanged
                 throw new ArgumentOutOfRangeException();
         }
 
-        _currJob = new FetchJob(tarList, elementId, isLongLineDirect);
+        _currJob = new FetchJob(tarList, isLongLineDirect);
         _currJob.OnProcessStatus += CurrJob_OnProcessStatus;
         _currJob.OnProcessCompleted += CurrJob_OnProcessCompleted;
 

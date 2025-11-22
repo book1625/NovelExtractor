@@ -106,7 +106,7 @@ namespace ContentExtractor
         /// <summary>
         /// 解析最大內文
         /// </summary>
-        public void ParseTextContext(string tarId = null)
+        public void ParseTextContext()
         {
             var context = GetHtmlContent(
                 highPriorityEncode,
@@ -127,7 +127,7 @@ namespace ContentExtractor
             {
                 //抽出最大內文節點
                 var dTree = new DomTree(context);
-                dTree.InitMaxOuterHtmlAndMaxInnerTextNodeV2(tarId);
+                dTree.InitMaxOuterHtmlAndMaxInnerTextNodeV2();
                 targetTextNode = dTree.MaxInnerTextNode;
             }
         }
@@ -256,7 +256,7 @@ namespace ContentExtractor
 
             //解析下載清單
             var dTree = new DomTree(context);
-            downloadLinkNodes = dTree.ExtractBigTableLinkNodes(limitChildDepth);
+            downloadLinkNodes = dTree.ExtractContainerLinkNodes(limitChildDepth);
         }
 
         /// <summary>

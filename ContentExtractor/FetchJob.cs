@@ -19,12 +19,7 @@ namespace ContentExtractor
         /// <summary>
         /// 記錄所有被要求的工作連結
         /// </summary>
-        private readonly List<PageFetchItem> allItems;
-
-        /// <summary>
-        /// 記錄指定元素 ID，這個元素會被用來抓取內容
-        /// </summary>
-        private readonly string targetElementId;
+        private readonly List<PageFetchItem> allItems;       
 
         /// <summary>
         /// 是否直接長行解析
@@ -39,9 +34,8 @@ namespace ContentExtractor
         /// <summary>
         /// ctor
         /// </summary>
-        public FetchJob(List<Tuple<string, string>> fetchList, string tarElementId, bool isLongLineDirect)
+        public FetchJob(List<Tuple<string, string>> fetchList, bool isLongLineDirect)
         {
-            targetElementId = tarElementId;
             this.isLongLineDirect = isLongLineDirect;
             allItems = fetchList.Select((f, i) => new PageFetchItem(isLongLineDirect)
             {
@@ -80,7 +74,7 @@ namespace ContentExtractor
                             //沒資料就試著拿取
                             if (!fetchItem.IsFetched)
                             {
-                                fetchItem.ParseTextContext(targetElementId);
+                                fetchItem.ParseTextContext();
 
                                 //如果有拿到資料而且有要求隨機延遲，就隨機延遲一下
                                 if (isRandomDelay && fetchItem.IsFetched) Thread.Sleep(rand.Next(1, 5) * 1000);

@@ -1,17 +1,17 @@
 ﻿<Window
+    x:Class="Extractor.MainWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:local="clr-namespace:Extractor"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:toolkit="http://schemas.xceed.com/wpf/xaml/toolkit"
     Title="Extractor"
     Width="1300"
     Height="700"
     d:DataContext="{d:DesignInstance Type=local:MainWindowViewModel,
                                      IsDesignTimeCreatable=False}"
-    x:Class="Extractor.MainWindow"
-    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:local="clr-namespace:Extractor"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:toolkit="http://schemas.xceed.com/wpf/xaml/toolkit"
-    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     FontSize="14"
-    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     mc:Ignorable="d">
 
     <Window.Resources>
@@ -39,8 +39,18 @@
             <TextBlock Margin="5" Text="目標網頁：" />
             <TextBox Margin="5" Text="{Binding TargetUrl, Mode=TwoWay}" />
             <WrapPanel Orientation="Horizontal">
-                <CheckBox Margin="5,0" VerticalAlignment="Center" IsChecked="{Binding IsReservedList, Mode=TwoWay}">反轉排序</CheckBox>
-                <CheckBox Margin="5,0" VerticalAlignment="Center" IsChecked="{Binding IsRandomDelay, Mode=TwoWay}">隨機延遲</CheckBox>
+                <CheckBox
+                    Margin="5,0"
+                    VerticalAlignment="Center"
+                    IsChecked="{Binding IsReservedList, Mode=TwoWay}">
+                    反轉排序
+                </CheckBox>
+                <CheckBox
+                    Margin="5,0"
+                    VerticalAlignment="Center"
+                    IsChecked="{Binding IsRandomDelay, Mode=TwoWay}">
+                    隨機延遲
+                </CheckBox>
                 <TextBlock Margin="5,0" VerticalAlignment="Center">解析深度</TextBlock>
                 <toolkit:IntegerUpDown VerticalAlignment="Center" Value="{Binding PageParseDepth, Mode=TwoWay}" />
                 <TextBlock Margin="5,0" VerticalAlignment="Center">網址模式</TextBlock>
@@ -49,9 +59,12 @@
                     VerticalAlignment="Center"
                     ItemsSource="{Binding UrlModes}"
                     SelectedItem="{Binding SelectedUrlMode, Mode=TwoWay}" />
-                <TextBlock>指定元素 id</TextBlock>
-                <TextBox Text="{Binding ElementId, Mode=TwoWay}" MinWidth="50" Margin="5,0,0,0"/>
-                <CheckBox Margin="5,0" VerticalAlignment="Center" IsChecked="{Binding IsLongLineDirect, Mode=TwoWay}">直接長行解文</CheckBox>
+                <CheckBox
+                    Margin="5,0"
+                    VerticalAlignment="Center"
+                    IsChecked="{Binding IsLongLineDirect, Mode=TwoWay}">
+                    最大內文為長行文
+                </CheckBox>
             </WrapPanel>
             <Button Margin="5" Command="{Binding ParseCommand}">解析清單</Button>
             <StackPanel Margin="5" Orientation="Horizontal">
