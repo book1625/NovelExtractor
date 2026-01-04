@@ -1,4 +1,4 @@
-﻿using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Input;
 using ContentExtractor;
 using System;
 using System.Collections.Generic;
@@ -10,7 +10,7 @@ using System.Runtime.CompilerServices;
 
 namespace Extractor;
 
-public class MainWindowViewModel:INotifyPropertyChanged
+public class MainWindowViewModel : INotifyPropertyChanged
 {
     /// <summary>
     /// 下載網址的取得模式
@@ -279,7 +279,7 @@ public class MainWindowViewModel:INotifyPropertyChanged
         {
             Url = TargetUrl
         };
-                
+
         parse.ParseDownloadList(pageParseDepth);
 
         var download = parse.GetDownloadList(isReservedList);
@@ -377,10 +377,10 @@ public class MainWindowViewModel:INotifyPropertyChanged
             return;
         }
 
-        var resultText = _currJob.SaveToTxtFile(AppDomain.CurrentDomain.BaseDirectory, BookName, Author) ? "成功" : "失敗";
+        var resultText = _currJob.SaveToTxtFile(AppDomain.CurrentDomain.BaseDirectory, BookName, Author, (i) => DownloadList.First(d => d.Index == i).IsRequired) ? "成功" : "失敗";
         DisplayMessage($@"TXT 存檔結果 {resultText}");
 
-        resultText = _currJob.SaveToEpubFile(AppDomain.CurrentDomain.BaseDirectory, BookName, Author, size) ? "成功" : "失敗";
+        resultText = _currJob.SaveToEpubFile(AppDomain.CurrentDomain.BaseDirectory, BookName, Author, (i) => DownloadList.First(d => d.Index == i).IsRequired, size) ? "成功" : "失敗";
         DisplayMessage($@"EPUB 存檔結果 {resultText}");
     }, () => true);
 
@@ -437,12 +437,28 @@ public class MainWindowViewModel:INotifyPropertyChanged
 /// <summary>
 /// 顯示用下載物件
 /// </summary>
-public class DownloadItem:INotifyPropertyChanged
+public class DownloadItem : INotifyPropertyChanged
 {
     /// <summary>
     /// 識別索引碼
     /// </summary>
     public int Index { get; set; }
+
+    private bool isRequired = true;
+
+    /// <summary>
+    /// 是否為必要下載項目
+    /// </summary>
+    public bool IsRequired
+    {
+        get => isRequired;
+        set
+        {
+            if (value == isRequired) return;
+            isRequired = value;
+            OnPropertyChanged();
+        }
+    }
 
     private string? _title;
 

@@ -1,4 +1,4 @@
-﻿using NLog;
+using NLog;
 using QuickEPUB;
 using System;
 using System.Collections.Generic;
@@ -118,7 +118,7 @@ namespace ContentExtractor
         /// <param name="bookName"></param>
         /// <param name="authName"></param>
         /// <returns></returns>
-        public bool SaveToTxtFile(string path, string bookName, string authName)
+        public bool SaveToTxtFile(string path, string bookName, string authName, Func<int,bool> checkRequireFunc)
         {
             try
             {
@@ -133,6 +133,8 @@ namespace ContentExtractor
                 {
                     foreach (var fetchItem in allItems)
                     {
+                        if (!checkRequireFunc(fetchItem.Index)) continue;
+
                         sw.WriteLine(ModifyTitle(fetchItem.Title, fetchItem.Index));
                         sw.WriteLine();
 
@@ -181,17 +183,17 @@ namespace ContentExtractor
         /// <param name="authName"></param>
         /// <param name="chunkSize">指定切分檔 item 數，0 以下為不切分</param>
         /// <returns></returns>
-        public bool SaveToEpubFile(string path, string bookName, string authName, int chunkSize = 0)
+        public bool SaveToEpubFile(string path, string bookName, string authName, Func<int, bool> checkRequiredFunc, int chunkSize = 0)
         {
-            if (chunkSize <= 0) return SaveToEpubFile(path, bookName, authName, allItems);
+            if (chunkSize <= 0) return SaveToEpubFile(path, bookName, authName, allItems, checkRequiredFunc);
 
             var chunkList = SplitList(allItems, chunkSize).Select((x, i) => new { Index = i + 1, Value = x });
-            return chunkList.All(chunk => SaveToEpubFile(path, bookName, authName, chunk.Value, chunk.Index, chunkList.Count().ToString().Length));
+            return chunkList.All(chunk => SaveToEpubFile(path, bookName, authName, chunk.Value, checkRequiredFunc, chunk.Index, chunkList.Count().ToString().Length));
         }
 
         /// <summary>
         /// 指定內容存在 epub
-        /// </summary>
+        /// </summary>Func<int, bool> checkRequiredFunc,
         /// <param name="path"></param>
         /// <param name="bookName"></param>
         /// <param name="authName"></param>
@@ -199,7 +201,7 @@ namespace ContentExtractor
         /// <param name="chunkNum">指出這是第幾個分割</param>
         /// <param name="chunkPadWidth">指出分割檔名的對齊寬度</param>
         /// <returns></returns>
-        private static bool SaveToEpubFile(string path, string bookName, string authName, List<PageFetchItem> targets, int chunkNum = 0, int chunkPadWidth = 1)
+        private static bool SaveToEpubFile(string path, string bookName, string authName, List<PageFetchItem> targets, Func<int, bool> checkRequiredFunc, int chunkNum = 0, int chunkPadWidth = 1)
         {
             try
             {
@@ -215,6 +217,8 @@ namespace ContentExtractor
 
                 foreach (var pageFetchItem in targets)
                 {
+                    if (!checkRequiredFunc(pageFetchItem.Index)) continue;
+
                     var context = pageFetchItem.GetContext();
                     if (!context.Any())
                     {
