@@ -139,7 +139,7 @@ namespace ContentExtractor
         public string[] GetContext()
         {
             //依模式取得最大內文節點
-            var targetText = isLongLineDirect ? targetLongLine : targetTextNode.InnerText;
+            var targetText = isLongLineDirect ? targetLongLine : targetTextNode?.InnerText;
 
             if (string.IsNullOrWhiteSpace(targetText))
             {
